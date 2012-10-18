@@ -57,15 +57,11 @@
 <textarea id="result" readonly="true" cols="80" rows="30">
 </textarea>
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
-<script type="text/javascript" src="../worker.js"></script>
-<script type="text/javascript" src="../wordfreq.js"></script>
+<script type="text/javascript" src="../src/wordfreq.js"></script>
 <script type="text/javascript">
 jQuery(function ($) {
 
 	$('#supported').addClass((WordFreq.supported?'':'not_') + 'support');
-
-	window.Worker.iframeURI = '../worker.iframe.html';
-	window.Worker.baseURI = 'tests/';
 
 	var $r = $('#result');
 	function start() {
@@ -88,7 +84,7 @@ jQuery(function ($) {
 	var text_japanese = $('#source_japanese').text();
 
 	var wordfreq = WordFreq({
-		worker: '../wordfreq.worker.js'
+		worker: '../src/wordfreq.worker.js'
 	});
 
 	$('#processText_chinese').bind(
@@ -605,7 +601,7 @@ The Ratification of the Conventions of nine States, shall be sufficient for the 
 
 The Word, "the," being interlined between the seventh and eighth Lines of the first Page, The Word "Thirty" being partly written on an Erazure in the fifteenth Line of the first Page, The Words "is tried" being interlined between the thirty second and thirty third Lines of the first Page and the Word "the" being interlined between the forty third and forty fourth Lines of the second Page.
 Attest William Jackson Secretary
-	
+
 done in Convention by the Unanimous Consent of the States present the Seventeenth Day of September in the Year of our Lord one thousand seven hundred and Eighty seven and of the Independance of the United States of America the Twelfth In Witness whereof We have hereunto subscribed our Names,
 
 </pre>
