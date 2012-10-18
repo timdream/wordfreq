@@ -1,57 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<meta charset=UTF-8>
-	<title>WordFreq() tests</title>
-	<style type="text/css">
-	#result {
-	position: fixed; top: 2em; right: 0;
-	font-family: monospace;
-	white-space: nowrap;
-	}
-	.support {
-		color: #080;
-	}
-	.not_support {
-		color: #800;
-	}
-	</style>
+  <meta charset=UTF-8>
+  <title>WordFreq() tests</title>
+  <style type="text/css">
+  #result {
+  position: fixed; top: 2em; right: 0;
+  font-family: monospace;
+  white-space: nowrap;
+  }
+  .support {
+    color: #080;
+  }
+  .not_support {
+    color: #800;
+  }
+  </style>
 </head>
 <body>
 <h2>Support</h2>
 <p id="supported">WordFreq.supported</p>
 <h2>wordfreq.processText();</h2>
 <form method="get" action="#" id="processText_chinese">
-	<p><input type="submit" value="中文" /></p>
+  <p><input type="submit" value="中文" /></p>
 </form>
 <form method="get" action="#" id="processText_english">
-	<p><input type="submit" value="English" /></p>
+  <p><input type="submit" value="English" /></p>
 </form>
 <form method="get" action="#" id="processText_japanese">
-	<p><input type="submit" value="日文" /></p>
+  <p><input type="submit" value="日文" /></p>
 </form>
 <form method="get" action="#" id="processText_user">
-	<p><textarea id="text_user"></textarea> <input type="submit" value="User Text" /></p>
+  <p><textarea id="text_user"></textarea> <input type="submit" value="User Text" /></p>
 </form>
 <h2>wordfreq.terminate();</h2>
 <form method="get" action="#" id="terminate">
-	<p><input type="submit" value="test" /></p>
+  <p><input type="submit" value="test" /></p>
 </form>
 <h2>wordfreq.empty();</h2>
 <form method="get" action="#" id="empty">
-	<p><input type="submit" value="test" /></p>
+  <p><input type="submit" value="test" /></p>
 </form>
 <h2>wordfreq.getList();</h2>
 <form method="get" action="#" id="getList">
-	<p><input type="submit" value="test" /></p>
+  <p><input type="submit" value="test" /></p>
 </form>
 <h2>wordfreq.getSortedList();</h2>
 <form method="get" action="#" id="getSortedList">
-	<p><input type="submit" value="test" /></p>
+  <p><input type="submit" value="test" /></p>
 </form>
 <h2>wordfreq.analyizeVolume();</h2>
 <form method="get" action="#" id="analyizeVolume">
-	<p><input type="submit" value="test" /></p>
+  <p><input type="submit" value="test" /></p>
 </form>
 <h2>Source</h2>
 <textarea id="result" readonly="true" cols="80" rows="30">
@@ -61,124 +61,124 @@
 <script type="text/javascript">
 jQuery(function ($) {
 
-	$('#supported').addClass((WordFreq.supported?'':'not_') + 'support');
+  $('#supported').addClass((WordFreq.supported?'':'not_') + 'support');
 
-	var $r = $('#result');
-	function start() {
-		$r.val('start');
-	}
-	function done (obj) {
-		if (typeof obj === 'undefined') {
-			$r.val('done.');
-			return;
-		}
-		$r.val('done: \n' + JSON.stringify(obj).replace(/(\]\,)/g, '$1\n'));
-	}
-	function error(e) {
-		$r.val(e);
-		return true;
-	}
+  var $r = $('#result');
+  function start() {
+    $r.val('start');
+  }
+  function done (obj) {
+    if (typeof obj === 'undefined') {
+      $r.val('done.');
+      return;
+    }
+    $r.val('done: \n' + JSON.stringify(obj).replace(/(\]\,)/g, '$1\n'));
+  }
+  function error(e) {
+    $r.val(e);
+    return true;
+  }
 
-	var text_chinese = $('#source_chinese').text();
-	var text_english = $('#source_english').text();
-	var text_japanese = $('#source_japanese').text();
+  var text_chinese = $('#source_chinese').text();
+  var text_english = $('#source_english').text();
+  var text_japanese = $('#source_japanese').text();
 
-	var wordfreq = WordFreq({
-		worker: '../src/wordfreq.worker.js'
-	});
+  var wordfreq = WordFreq({
+    worker: '../src/wordfreq.worker.js'
+  });
 
-	$('#processText_chinese').bind(
-		'submit',
-		function () {
-			try {
-				wordfreq.processText(text_chinese, done);
-			} catch (e) { error(e); }
-			start();
-			return false;
-		}
-	);
+  $('#processText_chinese').bind(
+    'submit',
+    function () {
+      try {
+        wordfreq.processText(text_chinese, done);
+      } catch (e) { error(e); }
+      start();
+      return false;
+    }
+  );
 
-	$('#processText_english').bind(
-		'submit',
-		function () {
-			try {
-				wordfreq.processText(text_english, done);
-			} catch (e) { error(e); }
-			start();
-			return false;
-		}
-	);
+  $('#processText_english').bind(
+    'submit',
+    function () {
+      try {
+        wordfreq.processText(text_english, done);
+      } catch (e) { error(e); }
+      start();
+      return false;
+    }
+  );
 
-	$('#processText_japanese').bind(
-		'submit',
-		function () {
-			try {
-				wordfreq.processText(text_japanese, done);
-			} catch (e) { error(e); }
-			start();
-			return false;
-		}
-	);
+  $('#processText_japanese').bind(
+    'submit',
+    function () {
+      try {
+        wordfreq.processText(text_japanese, done);
+      } catch (e) { error(e); }
+      start();
+      return false;
+    }
+  );
 
-	$('#processText_user').bind(
-		'submit',
-		function () {
-			try {
-				wordfreq.processText($('#text_user').val(), done);
-			} catch (e) { error(e); }
-			start();
-			return false;
-		}
-	);
+  $('#processText_user').bind(
+    'submit',
+    function () {
+      try {
+        wordfreq.processText($('#text_user').val(), done);
+      } catch (e) { error(e); }
+      start();
+      return false;
+    }
+  );
 
 
-	$('#terminate').bind(
-		'submit',
-		function () {
-			try {
-				wordfreq.processText(text, done);
-				wordfreq.terminate();
-			} catch (e) { error(e); }
-			$r.val('This result should not be overwritten by done later.');
-			return false;
-		}
-	);
-	$('#empty').bind(
-		'submit',
-		function () {
-			try {
-				wordfreq.empty(done);
-			} catch (e) { error(e); }
-			return false;
-		}
-	);
-	$('#getList').bind(
-		'submit',
-		function () {
-			try {
-				wordfreq.getList(done);
-			} catch (e) { error(e); }
-			return false;
-		}
-	);
-	$('#getSortedList').bind(
-		'submit',
-		function () {
-			try {
-				wordfreq.getSortedList(done);
-			} catch (e) { error(e); }
-			return false;
-		}
-	);
-	$('#analyizeVolume').bind(
-		'submit',
-		function () {
-			try {
-				wordfreq.analyizeVolume(done);
-			} catch (e) { error(e); }
-			return false;
-		}
-	);
+  $('#terminate').bind(
+    'submit',
+    function () {
+      try {
+        wordfreq.processText(text, done);
+        wordfreq.terminate();
+      } catch (e) { error(e); }
+      $r.val('This result should not be overwritten by done later.');
+      return false;
+    }
+  );
+  $('#empty').bind(
+    'submit',
+    function () {
+      try {
+        wordfreq.empty(done);
+      } catch (e) { error(e); }
+      return false;
+    }
+  );
+  $('#getList').bind(
+    'submit',
+    function () {
+      try {
+        wordfreq.getList(done);
+      } catch (e) { error(e); }
+      return false;
+    }
+  );
+  $('#getSortedList').bind(
+    'submit',
+    function () {
+      try {
+        wordfreq.getSortedList(done);
+      } catch (e) { error(e); }
+      return false;
+    }
+  );
+  $('#analyizeVolume').bind(
+    'submit',
+    function () {
+      try {
+        wordfreq.analyizeVolume(done);
+      } catch (e) { error(e); }
+      return false;
+    }
+  );
 });
 </script>
 <pre id="source_chinese">
