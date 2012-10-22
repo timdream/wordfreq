@@ -1,109 +1,158 @@
-/*!
+/*! wordfreq - Text corpus calculation in Javascript.
 
-  WordFreq text analyzer
-  run articles through N-gram and Porter Stemmer in Web Workers,
-  retrive list of words, or phrases.
+  Author: timdream <http://timc.idv.tw/>
 
-  Currently supports Chinese (using N-gram) and English (using Porter Stemmer)
-
-  usage:
-    var wordfreq = WordFreq(options); // init
-    wordfreq.processText(text, callback); // run text with WordFreq, save the result, then execute callback() when complete
-    wordfreq.terminate(); // stop the Web Worker
-    wordfreq.empty(callback); // empty results saved
-    wordfreq.getList(callback); // get a list of words from results
-    wordfreq.getSortedList(callback); // get a list of words, sorted by the number of appearance.
-    wordfreq.analyizeVolume(callback); // (experimental) return a number that indicate the volume of words
-
-  options:
-    worker:  // path to worker.js relative to the document (not JS), subject to same origin policy.
-    processCJK: // process Chinese or not
-    processEnglish: // process English or not
-    de_commword: // exclude stop words
-    de_repetition: // for Chinese, remove phrases with smaller number of words that has same count of a longer phrase encapsulate it.
-    unigram: // run Chiese with uni-gram.
-    bigram: // run Chiese with bi-gram.
-    trigram:
-    four_gram:
-    five_gram:
-    six_gram:
-    mincount: // minimal count for a word to be included in the list
 */
 
-"use strict";
+'use strict';
 
-var WordFreq = function (settings) {
+(function (global) {
 
-  if (!WordFreq.supported) return false;
+var WordFreq = function WordFreq(options) {
+  // Public API object
+  var wordfreq = {};
 
-  var worker,
-  options = {
-    worker: 'wordfreq.worker.js',
-    processCJK: true,
-    processEnglish: true,
-    de_commword: true,
-    de_repetition: true,
-    unigram: false,
-    bigram: true,
-    trigram: true,
-    four_gram: true,
-    five_gram: true,
-    six_gram: true,
-    mincount: 3
-  },
-  callbacks = [],
-  runTask = function (task) {
-    return function (callback) {
-      var callbackId = callbacks.length;
-      callbacks[callbackId] = callback;
-      worker.postMessage(
-        {
-          task: task,
-          callbackId: callbackId
-        }
-      );
+  // options: here, we only worry about workerUrl
+  options = options || {};
+  options.workerUrl = options.workerUrl || 'wordfreq.worker.js';
+
+  // start the worker
+  var worker = new Worker(options.workerUrl);
+
+  // message queue
+  var messageQueue = [];
+  var message;
+
+  // stopping flag prevent looped calls when we stop()
+  var stopping = false;
+
+  // add message to queue; if there is no ongoing message,
+  // start sending the message.
+  var addQueue = function addQueue(msg) {
+    messageQueue.push(msg);
+
+    if (!message && !stopping)
+      sendMessage();
+  };
+  // send message to worker
+  var sendMessage = function sendMessage() {
+    message = messageQueue.shift();
+    worker.postMessage({
+      method: message.method,
+      params: message.params
+    });
+  };
+  // process message received from worker
+  worker.onmessage = function gotMessage(evt) {
+    // Detach callback with global message reference
+    // so it cannot be called twice in stop()
+    var callback = message.callback;
+    delete message.callback;
+
+    if (callback)
+      callback.call(wordfreq, evt.data);
+    // Set the message to null, since we have finished processing
+    message = null;
+    if (messageQueue.length)
+      sendMessage();
+  };
+
+  worker.onerror = function gotError(evt) {
+    // Detach callback with global message reference
+    // so it cannot be called twice in stop()
+    var callback = message.callback;
+    delete message.callback;
+
+    if (callback)
+      callback.call(wordfreq, evt.data);
+    // Set the message to null, since we have finished processing
+    message = null;
+    if (messageQueue.length)
+      sendMessage();
+  };
+
+  var methods = ['process', 'empty', 'getList', 'getLength', 'getVolume'];
+  methods.forEach(function buildAPI(method) {
+    wordfreq[method] = function addMessage() {
+      var argLength = arguments.length;
+
+      var callback;
+      if (typeof arguments[arguments.length - 1] === 'function') {
+        callback = arguments[arguments.length - 1];
+        // exclude the callback from being put into params.
+        argLength--;
+      }
+
+      var params = [];
+      var i = 0;
+      while (i < argLength) {
+        params[i] = arguments[i];
+        i++;
+      }
+
+      addQueue({
+        method: method,
+        params: params,
+        callback: callback
+      });
+
+      return wordfreq;
     };
-  };
+  });
 
-  worker = new Worker(settings.worker);
+  // init the worker with option data
+  addQueue({
+    method: 'init',
+    params: [options]
+  });
 
-  worker.onmessage = function (ev) {
-    if (typeof callbacks[ev.data.callbackId] === 'function') callbacks[ev.data.callbackId].call(this, ev.data.returnData);
-    delete callbacks[ev.data.callbackId];
-  };
+  // Remove reference of the option object
+  options = undefined;
 
-  if (!settings) settings = {};
-  for (var opt in options) if (options.hasOwnProperty(opt)) {
-    if (typeof settings[opt] === 'undefined') settings[opt] = options[opt];
-  }
+  wordfreq.stop = function stop(triggerCallbacks) {
+    if (stopping)
+      return;
 
-  worker.postMessage(
-    {
-      task: 'init',
-      settings: settings
+    // stop the worker
+    worker.terminate();
+
+    if (!triggerCallbacks) {
+      message = null;
+      messageQueue = [];
+
+      return wordfreq;
     }
-  );
 
-  return {
-    processText: function (text, callback) {
-      var callbackId = callbacks.length;
-      callbacks[callbackId] = callback;
-      worker.postMessage(
-        {
-          task: 'processText',
-          callbackId: callbackId,
-          text: text
-        }
-      );
-    },
-    terminate: function () {
-      worker.terminate();
-    },
-    empty: runTask('empty'),
-    getList: runTask('getList'),
-    getSortedList: runTask('getSortedList'),
-    analyizeVolume: runTask('analyizeVolume')
+    stopping = true;
+    // tell all pending callbacks that the work has stopped
+    if (message && message.callback)
+      message.callback.call(wordfreq);
+    while (messageQueue.length) {
+      var msg = messageQueue.shift();
+      if (msg.callback)
+        msg.callback.call(wordfreq);
+    }
+    message = null;
+    stopping = false;
+
+    return wordfreq;
   };
+
+  return wordfreq;
 };
 
-WordFreq.supported = (window.Worker && Array.prototype.push && Array.prototype.indexOf && Array.prototype.forEach);
+WordFreq.isSupported = !!(global.Worker &&
+  Array.prototype.push &&
+  Array.prototype.indexOf &&
+  Array.prototype.forEach &&
+  Array.isArray &&
+  Object.create);
+
+// Expose the library as an AMD module
+if (typeof define === 'function' && define.amd) {
+  define('wordfreq', [], function() { return WordFreq; });
+} else {
+  global.WordFreq = WordFreq;
+}
+
+})(this);

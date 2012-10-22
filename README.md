@@ -1,13 +1,33 @@
 # wordfreq
 
 [Text corpus](https://en.wikipedia.org/wiki/Text_corpus) calculation in Javascript. 
-Supports Chinese, English, and Japanese (experimential).
+Supports Chinese, English.
 
 This library is a spin-off project from [HTML5 Word Cloud](https://github.com/timdream/wordcloud).
 
 ## Simple usage
 
-See tests and script source code for now.
+Load `wordfreq.js` script to the web page, and run:
+
+    // Create an options object for initialization
+    var options = {
+      workerUrl: 'path/to/wordfreq.worker.js' };
+    // Initialize and run process() function
+    var wordfreq = WordFreq(options).process(text, function (list) {
+      // console.log the list returned in this callback.
+      console.log(list);
+    });
+
+`WordFreq()` methods are chainable, for example,
+
+    // Process 3 strings and get corpus of all the texts.
+    WordFreq(options)
+      .process(text).process(text2).process(text3)
+      .getList(function (list) {
+        console.log(list);
+      });
+
+To use this library synchronously, load `wordfreq.worker.js` and use the `WordFreqSync` interface. Check `API.md` for available options and methods.
 
 ## Algorithm 
 
@@ -27,11 +47,13 @@ To run tests, first you would need to pull the required QUnit library by running
 
     git submodule init
     git submodule update
-    
+
 Then, start a localhost HTTP server, for example,
 
     python -m SimpleHTTPServer 8009
-    
+
 Point your browser to [http://localhost:8009/test/](http://localhost:8009/test/) to start testing.
 
 You will find all the information you need to write testcases on the [QUnit](http://qunitjs.com) website. All code submission are expected to accompany with testcases.
+
+Known issue: the testcases will make Firefox/Mac 16.0.1 choke; Web Worker will stop working after a few reloads. To test in Firefox, use [Nightly](https://nightly.mozilla.org/) instead.

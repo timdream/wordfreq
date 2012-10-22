@@ -1,8 +1,18 @@
+/*! wordfreq - Text corpus calculation in Javascript.
 
-"use strict";
+  Author: timdream <http://timc.idv.tw/>
 
-// For simulated worker in IE
-var send = (typeof workerPostMessage !== 'undefined')?workerPostMessage:postMessage;
+  This file contains the following library (unmodified but minified):
+  http://tartarus.org/~martin/PorterStemmer/js.txt
+  // Porter stemmer in Javascript
+  // Release 1 be 'andargor', Jul 2004
+  // Release 2 (substantially revised) by Christopher McKenzie, Aug 2009
+
+*/
+
+'use strict';
+
+(function (global) {
 
 // http://tartarus.org/~martin/PorterStemmer/js.txt
 // Porter stemmer in Javascript
@@ -10,191 +20,290 @@ var send = (typeof workerPostMessage !== 'undefined')?workerPostMessage:postMess
 // Release 2 (substantially revised) by Christopher McKenzie, Aug 2009
 var stemmer=function(){var g={ational:"ate",tional:"tion",enci:"ence",anci:"ance",izer:"ize",bli:"ble",alli:"al",entli:"ent",eli:"e",ousli:"ous",ization:"ize",ation:"ate",ator:"ate",alism:"al",iveness:"ive",fulness:"ful",ousness:"ous",aliti:"al",iviti:"ive",biliti:"ble",logi:"log"},h={icate:"ic",ative:"",alize:"al",iciti:"ic",ical:"ic",ful:"",ness:""};return function(a){var d,b,e,c,f;if(a.length<3)return a;e=a.substr(0,1);if(e=="y")a=e.toUpperCase()+a.substr(1);c=/^(.+?)(ss|i)es$/;b=/^(.+?)([^s])s$/; if(c.test(a))a=a.replace(c,"$1$2");else if(b.test(a))a=a.replace(b,"$1$2");c=/^(.+?)eed$/;b=/^(.+?)(ed|ing)$/;if(c.test(a)){b=c.exec(a);c=/^([^aeiou][^aeiouy]*)?[aeiouy][aeiou]*[^aeiou][^aeiouy]*/;if(c.test(b[1])){c=/.$/;a=a.replace(c,"")}}else if(b.test(a)){b=b.exec(a);d=b[1];b=/^([^aeiou][^aeiouy]*)?[aeiouy]/;if(b.test(d)){a=d;b=/(at|bl|iz)$/;f=/([^aeiouylsz])\1$/;d=/^[^aeiou][^aeiouy]*[aeiouy][^aeiouwxy]$/;if(b.test(a))a+="e";else if(f.test(a)){c=/.$/;a=a.replace(c,"")}else if(d.test(a))a+="e"}}c= /^(.+?)y$/;if(c.test(a)){b=c.exec(a);d=b[1];c=/^([^aeiou][^aeiouy]*)?[aeiouy]/;if(c.test(d))a=d+"i"}c=/^(.+?)(ational|tional|enci|anci|izer|bli|alli|entli|eli|ousli|ization|ation|ator|alism|iveness|fulness|ousness|aliti|iviti|biliti|logi)$/;if(c.test(a)){b=c.exec(a);d=b[1];b=b[2];c=/^([^aeiou][^aeiouy]*)?[aeiouy][aeiou]*[^aeiou][^aeiouy]*/;if(c.test(d))a=d+g[b]}c=/^(.+?)(icate|ative|alize|iciti|ical|ful|ness)$/;if(c.test(a)){b=c.exec(a);d=b[1];b=b[2];c=/^([^aeiou][^aeiouy]*)?[aeiouy][aeiou]*[^aeiou][^aeiouy]*/; if(c.test(d))a=d+h[b]}c=/^(.+?)(al|ance|ence|er|ic|able|ible|ant|ement|ment|ent|ou|ism|ate|iti|ous|ive|ize)$/;b=/^(.+?)(s|t)(ion)$/;if(c.test(a)){b=c.exec(a);d=b[1];c=/^([^aeiou][^aeiouy]*)?[aeiouy][aeiou]*[^aeiou][^aeiouy]*[aeiouy][aeiou]*[^aeiou][^aeiouy]*/;if(c.test(d))a=d}else if(b.test(a)){b=b.exec(a);d=b[1]+b[2];b=/^([^aeiou][^aeiouy]*)?[aeiouy][aeiou]*[^aeiou][^aeiouy]*[aeiouy][aeiou]*[^aeiou][^aeiouy]*/;if(b.test(d))a=d}c=/^(.+?)e$/;if(c.test(a)){b=c.exec(a);d=b[1];c=/^([^aeiou][^aeiouy]*)?[aeiouy][aeiou]*[^aeiou][^aeiouy]*[aeiouy][aeiou]*[^aeiou][^aeiouy]*/; b=/^([^aeiou][^aeiouy]*)?[aeiouy][aeiou]*[^aeiou][^aeiouy]*([aeiouy][aeiou]*)?$/;f=/^[^aeiou][^aeiouy]*[aeiouy][^aeiouwxy]$/;if(c.test(d)||b.test(d)&&!f.test(d))a=d}c=/ll$/;b=/^([^aeiou][^aeiouy]*)?[aeiouy][aeiou]*[^aeiou][^aeiouy]*[aeiouy][aeiou]*[^aeiou][^aeiouy]*/;if(c.test(a)&&b.test(a)){c=/.$/;a=a.replace(c,"")}if(e=="y")a=e.toLowerCase()+a.substr(1);return a}}();
 
-// English stopwords that is being filtered out by Google
-// http://www.ranks.nl/resources/stopwords.html (the shortest list)
-var englishStopWords = [
-	'i','a','about',
-	'an','and','are','as','at',
-	'be','by','com','for',
-	'from','how','in',
-	'is','it','not',
-	'of','on','or','that',
-	'the','this','to','was',
-	'what','when','where',
-	'who','will','with',
-	'www','the'
-];
-var cjkStopWords = [
-	'([^\u76ee])\u7684', // chinese 'de'
-	'\u3092', // wo
-	'\u3067\u3059', // desu
-	'\u3059\u308b', //suru
-	'\u306e', //no
-	'\u308c\u3089' //rera
-];
+var WordFreqSync = function WordFreqSync(options) {
+  var list = [];
+  var terms = Object.create(null);
 
+  options = options || {};
 
-var pool = {
-	words: {},
-	reps: {}
-},
-settings = {},
-getList = function () {
-	var list = [];
-	for (var word in pool.words) {
-		if (pool.words[word] < settings.mincount) continue;
-		var maxRep;
-		if (typeof pool.reps[word] === 'object') {
-			var c = 0;
-			for (var rep in pool.reps[word]) {
-				if (typeof pool.reps[word][rep] === 'number' && pool.reps[word][rep] > c) {
-					maxRep = rep;
-					c = pool.reps[word][rep];
-				}
-			}
-		}
-		list.push([maxRep || word, pool.words[word]]);
-		maxRep = false;
-	}
-	return list;
-},
-tasks = {
-	init: function (ev) {
-		settings = ev.data.settings;
-	},
-	processText : function (ev) {
-		var words = {},
-		reps = {},
-		text = ev.data.text;
-	
-		function handleWord (word, rep) {
-			if (typeof words[word] !== 'number') words[word] = 1;
-			else words[word]++;
-			if (rep) {
-				if (typeof reps[word] !== 'object') reps[word] = {};
-				if (typeof reps[word][rep] !== 'number') reps[word][rep] = 1;
-				else reps[word][rep]++;
-			}
-		}
-	
-		function processCJK (text) {
-			if (settings.de_commword) {
-				cjkStopWords.forEach(
-					function (w) {
-						text = text.replace(new RegExp(w, 'g'), '$1\n');
-					}
-				);
-			}
-		
-			// TBD: Cannot match CJK characters beyond BMP, e.g. \u20000-\u2A6DF at plane B.
-			// Han: \u4E00-\u9FFF\u3400-\u4DBF
-			// Kana: \u3041-\u309f\u30a0-\u30ff
-			text = text.replace(/[^\u4E00-\u9FFF\u3400-\u4DBF\u3041-\u309f\u30a0-\u30ff]+/gm, '\n');
-		
-			var reg = /./g,
-			reuni = /^.$/,
-			rebi = /^.{2}$/,
-			re3 = /^.{3}$/,
-			re4 = /^.{4}$/,
-			re5 = /^.{5}$/;
-		
-			text.replace(
-				reg,
-				function (str, offset, text) {
-					if (settings.unigram) handleWord(str);
-					if (settings.bigram && reuni.test(text[offset+1])) handleWord(str + text[offset+1]);
-					if (settings.trigram && rebi.test(text.substr(offset+1, 2))) handleWord(str + text.substr(offset+1, 2));
-					if (settings.four_gram && re3.test(text.substr(offset+1, 3))) handleWord(str + text.substr(offset+1, 3));
-					if (settings.five_gram && re4.test(text.substr(offset+1, 4))) handleWord(str + text.substr(offset+1, 4));
-					if (settings.six_gram && re5.test(text.substr(offset+1, 5))) handleWord(str + text.substr(offset+1, 5));
-				}
-			);
-		
-			if (settings.de_repetition) {
-				// Not doing hasOwnProperty() coz this is a standalone worker js
-				for (var word in words) /* if (words.hasOwnProperty(word)) */ {
-					if (word.length === 1) return;
-					var l = word.length-1;
-					while (l) {
-						var i = word.length-l;
-						while (i >= 0) {
-							var substr = word.substr(i, l);
-							if (words[substr] && words[substr] === words[word]) words[substr] = -1; 
-							i--;
-						}
-						l--;
-					}
-				}
-			}
-		}
-		
-		function processEnglish(text) {
-			text
-			.replace(/[^A-Za-zéÉ'’_\-0-9@\.]+/gm, '\n')
-			.replace(/^([^\.]+)\.$/gm, '$1')
-			.replace(/[\'\u2019](s|ll|d)?$/gm, '')
-			.split('\n').forEach(
-				function (word) {
-					if (!word) return;
-					if (/^[0-9\.@\-]+$/.test(word)) return;
-					if (word.length < 2) return;
-					if (settings.de_commword && englishStopWords.indexOf(word.toLowerCase()) !== -1) return;
-					handleWord(stemmer(word).toLowerCase(), word);
-				}
-			);
-		}
-		
-		if (settings.processCJK) processCJK(text);
-		if (settings.processEnglish) processEnglish(text);
+  // fill some defaults
+  options.languages = options.languages || ['chinese', 'english'];
+  options.stopWordSets = options.stopWordSets || ['cjk', 'english1'];
 
-		for (var word in words)  {
-			if (typeof pool.words[word] !== 'number') pool.words[word] = words[word];
-			else pool.words[word] += words[word];
-			if (reps[word]) {
-				if (!pool.reps[word]) pool.reps[word] = reps[word];
-				// else TBD
-			}
-		};
-		send({returnData: pool.words, callbackId: ev.data.callbackId});
-	},
-	empty: function (ev) {
-		pool.words = {};
-		pool.reps = {};
-		send({returnData: pool.words, callbackId: ev.data.callbackId});
-	},
-	getList: function (ev) {
-		send({returnData: getList(), callbackId: ev.data.callbackId});
-	},
-	getSortedList: function (ev) {
-		send(
-			{
-				returnData: getList().sort(
-					function (a, b) {
-						if (a[1] > b[1]) return -1;
-						if (a[1] < b[1]) return 1;
-						var t = [a[0], b[0]];
-						t = t.sort();
-						if (t[0] !== a[0]) return 1;
-						return 0;
-					}
-				),
-				callbackId: ev.data.callbackId
-			}
-		);
-	},
-	analyizeVolume: function (ev) {
-		var v = 0;
+  if (!Array.isArray(options.stopWords)) {
+    options.stopWords = [];
+  }
 
-		for (var word in pool.words) {
-			if (pool.words[word] < settings.mincount) continue;
-			v += word.length*pool.words[word]*pool.words[word];
-		}
-		send({returnData: v, callbackId: ev.data.callbackId});
-	}
+  options.stopWordSets.forEach(function (stopWordSet) {
+    switch (stopWordSet) {
+      case 'cjk':
+        options.stopWords = options.stopWords.concat([
+          '([^\u76ee])\u7684', /* Chinese 'de' */
+          '\u3092', /* Japanese wo */
+          '\u3067\u3059', /* Japanese desu */
+          '\u3059\u308b', /* Japanese suru */
+          '\u306e', /* Japanese no */
+          '\u308c\u3089' /* Japanese rera */]);
+
+        break;
+
+      case 'english1':
+        options.stopWords = options.stopWords.concat([
+          'i','a','about', 'an','and','are','as','at',
+          'be','by','com','for', 'from','how','in',
+          'is','it','not', 'of','on','or','that',
+          'the','this','to','was', 'what','when','where',
+          'who','will','with', 'www','the']);
+        break;
+    }
+  });
+
+  if (typeof options.filterSubstring !== 'boolean')
+    options.filterSubstring = true;
+
+  options.maxiumPhraseLength = options.maxiumPhraseLength || 8;
+  options.minimumCount = options.minimumCount || 3;
+
+  return {
+    process: function process(text) {
+      if (typeof text !== 'string')
+        throw 'You need to supply text for processing.'
+
+      // English
+      if (options.languages.indexOf('english') !== -1) {
+        // For English, we count "stems" instead of words,
+        // and decide how to represent that stem at the end
+        // according to the counts.
+        var stems = Object.create(null);
+
+        // say bye bye to characters that is not belongs to a word
+        var words = text.split(/[^A-Za-zéÉ'’_\-0-9@\.]+/);
+
+        var stopWords = options.stopWords;
+
+        words.forEach(function (word) {
+          word = word
+            .replace(/\.+/g, '.') // replace multiple full stops
+            .replace(/[\'’](s|ll|d|ve)?$/, ''); // get rid of ’ and '
+
+          // skip if the word is shorter than two characters
+          // (i.e. exactly one letter)
+          if (!word || word.length < 2)
+            return;
+
+          // that's not a word unless it contains at least an alphabet
+					if (/^[0-9\.@\-]+$/.test(word))
+					  return;
+
+          // skip if this is a stop word
+          if (stopWords.indexOf(word.toLowerCase()) !== -1)
+            return;
+
+          var stem = stemmer(word).toLowerCase();
+
+          // count++ for the stem
+          if (!(stem in stems))
+            stems[stem] = { count: 0, word: word};
+          stems[stem].count++;
+
+          // if the current word representing the stem is longer than
+          // this one, use this word instead (booking -> book)
+          if (word.length < stems[stem].word.length)
+            stems[stem].word = word;
+
+          // if the current word representing the stem is of the same
+          // length but with different form,
+          // use the lower-case representation (Book -> book)
+          if (word.length === stems[stem].word.length &&
+              word !== stems[stem].word)
+            stems[stem].word = word.toLowerCase();
+        });
+
+        // Push each "stem" into terms as word
+        for (var stem in stems) {
+          var term = stems[stem].word;
+          if (!(term in terms)) {
+            terms[term] = stems[stem].count;
+          } else {
+            terms[term] += stems[stem].count;
+          }
+        }
+
+        stems = undefined;
+      }
+
+      // Chinese
+      if (options.languages.indexOf('chinese') !== -1) {
+        // Chinese is a language without word boundary.
+        // We must use N-gram here to extract meaningful terms.
+
+        // say good bye to non-Chinese (Kanji) characters
+        // TBD: Cannot match CJK characters beyond BMP,
+        // e.g. \u20000-\u2A6DF at plane B.
+
+        // Han: \u4E00-\u9FFF\u3400-\u4DBF
+        // Kana: \u3041-\u309f\u30a0-\u30ff
+        var regexp = /[^\u4E00-\u9FFF\u3400-\u4DBF]+/g;
+        text = text.replace(regexp, '\n');
+
+        // Use the stop words as separators -- replace them.
+        options.stopWords.forEach(function (stopWord) {
+          // Not handling that stop word if it's not a Chinese word.
+          if (!(/^[\u4E00-\u9FFF\u3400-\u4DBF]+$/).test(stopWord))
+            return;
+
+          text = text.replace(new RegExp(stopWord, 'g'), '$1\n');
+        });
+
+        var chunks = text.split(/\n+/);
+
+        // With a given natural number n, call the callback 2^(n-1) times
+        // with an array representing the possible separation of the number n.
+        var separate = function separate(n, callback) {
+            for (var i = 1; i < n; i++) {
+                separate(n-i, function(ret) {
+                    ret.push(i);
+                    callback(ret);
+                });
+            }
+            callback([n]);
+        }
+
+        var pendingTerms = Object.create(null);
+
+        // counts all the chunks (and it's substrings) in pendingTerms
+        chunks.forEach(function processChunk(chunk) {
+          if (chunk.length === 0)
+            return;
+
+          separate(chunk.length, function (separation) {
+            var start = 0;
+            separation.forEach(function (n) {
+              var term = chunk.substr(start, n);
+              if (term.length <= options.maxiumPhraseLength &&
+                  term.length > 1) {
+                if (!(term in pendingTerms))
+                  pendingTerms[term] = 0;
+
+                pendingTerms[term]++;
+              }
+              start += n;
+            });
+          });
+        });
+
+        // if filterSubstring is true, remove the substrings with the exact
+        // same count as the longer term (implying they are only present in
+        // the longer terms)
+        if (options.filterSubstring) {
+          for (var term in pendingTerms) {
+            separate(term.length, function (separation) {
+              var start = 0;
+              separation.forEach(function (n) {
+                if (n === term.length)
+                  return;
+
+                var substr = term.substr(start, n);
+                if ((substr in pendingTerms) &&
+                    pendingTerms[substr] === pendingTerms[term]) {
+                  delete pendingTerms[substr];
+                }
+                start += n;
+              });
+            });
+          }
+        }
+
+        // add the pendingTerms into terms
+        for (var term in pendingTerms) {
+          if (!(term in terms))
+            terms[term] = 0;
+
+          terms[term] += pendingTerms[term];
+        }
+
+        pendingTerms = undefined;
+      }
+
+      // Update the list
+      list = [];
+      for (var term in terms) {
+        if (terms[term] < options.minimumCount)
+          continue;
+
+        list.push([term, terms[term]]);
+      }
+      list = list.sort(function (a, b) {
+        if (a[1] > b[1]) return -1;
+        if (a[1] < b[1]) return 1;
+        if (a[0] === b[0])
+          return 0;
+        var t = ([a[0], b[0]]).sort();
+        if (t[0] !== a[0]) return 1;
+        return -1;
+			});
+
+      return list;
+    },
+
+    empty: function empty() {
+      list = [];
+      terms = Object.create(null);
+      return true;
+    },
+
+    getList: function getList() {
+      return list;
+    },
+
+    getLength: function getLength() {
+      return list.length;
+    },
+
+    getVolume: function getVolume() {
+      var volume = 0;
+      list.forEach(function eachListItem(item) {
+        volume += item[0].length * Math.pow(item[1], 2);
+      });
+
+      return volume;
+    },
+
+    stop: function () { /* Nothing to do. */ }
+  };
 };
 
-// Use keyword self to explicitly reference to the global object, as a workaround to Chrome 11
-// See https://code.google.com/p/chromium/issues/detail?id=81371
-self.onmessage = function (ev) {
-	tasks[ev.data.task].call(this, ev);
-};
+if (typeof define === 'function' && define.amd) {
+  // Expose the library as an AMD module
+  define('wordfreqsync', [], function() { return WordFreqSync; });
+} else {
+  // expose WordFreqSync as a global interface.
+  global.WordFreqSync = WordFreqSync;
+
+  // Assume we are in Web Worker, insert message interface
+  var wordfreqsync;
+  if (self && !self.onmessage) {
+    self.onmessage = function gotMessage(evt) {
+      var msg = evt.data;
+      var method = msg.method;
+      var params = msg.params;
+
+      if (method === 'init') {
+        wordfreqsync = WordFreqSync.apply(global, params);
+        self.postMessage(true);
+        return;
+      }
+
+      if (!wordfreqsync)
+        throw 'You must init to create an instance first';
+
+      if (!method || !wordfreqsync[method])
+        throw 'No such method';
+
+      var result = wordfreqsync[method].apply(wordfreqsync, params);
+      self.postMessage(result);
+    };
+  }
+}
+
+})(this);
