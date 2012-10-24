@@ -64,6 +64,18 @@ var WordFreqSync = function WordFreqSync(options) {
   options.maxiumPhraseLength = options.maxiumPhraseLength || 8;
   options.minimumCount = options.minimumCount || 3;
 
+  // With a given natural number n, call the callback 2^(n-1) times
+  // with an array representing the possible separation of the number n.
+  var separate = function separate(n, callback) {
+      for (var i = 1; i < n; i++) {
+          separate(n-i, function(ret) {
+              ret.push(i);
+              callback(ret);
+          });
+      }
+      callback([n]);
+  }
+
   return {
     process: function process(text) {
       if (typeof text !== 'string')
@@ -156,18 +168,6 @@ var WordFreqSync = function WordFreqSync(options) {
         });
 
         var chunks = text.split(/\n+/);
-
-        // With a given natural number n, call the callback 2^(n-1) times
-        // with an array representing the possible separation of the number n.
-        var separate = function separate(n, callback) {
-            for (var i = 1; i < n; i++) {
-                separate(n-i, function(ret) {
-                    ret.push(i);
-                    callback(ret);
-                });
-            }
-            callback([n]);
-        }
 
         var pendingTerms = Object.create(null);
 
