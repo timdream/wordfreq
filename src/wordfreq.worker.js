@@ -280,9 +280,17 @@ if (typeof define === 'function' && define.amd) {
   // expose WordFreqSync as a global interface.
   global.WordFreqSync = WordFreqSync;
 
-  // Assume we are in Web Worker, insert message interface
-  var wordfreqsync;
-  if (self && !self.onmessage) {
+  /* If those conditions are met, assume we are in Web Workers.
+   * Web Workers script that importScripts() us must have their onmessage
+   * handler set-up first.
+   * 1. the global object must have a self property that is assigned to itself.
+   * 2. the global object must NOT have an window property that is assigned to
+   *    itself.
+   */
+  if (('self' in global) && (global === self) &&
+      !(('window' in global) && window === global) &&
+      !self.onmessage && self.postMessage && self.importScripts) {
+    var wordfreqsync;
     self.onmessage = function gotMessage(evt) {
       var msg = evt.data;
       var method = msg.method;
