@@ -269,7 +269,7 @@ var WordFreqSync = function WordFreqSync(options) {
       return volume;
     },
 
-    stop: function () { /* Nothing to do. */ }
+    stop: function stop() { /* Nothing to do. */ }
   };
 };
 
