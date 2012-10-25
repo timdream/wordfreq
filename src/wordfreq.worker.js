@@ -64,16 +64,20 @@ var WordFreqSync = function WordFreqSync(options) {
   options.maxiumPhraseLength = options.maxiumPhraseLength || 8;
   options.minimumCount = options.minimumCount || 3;
 
-  // With a given natural number n, call the callback 2^(n-1) times
-  // with an array representing the possible separation of the number n.
-  var separate = function separate(n, callback) {
-      for (var i = 1; i < n; i++) {
-          separate(n-i, function(ret) {
-              ret.push(i);
-              callback(ret);
-          });
-      }
-      callback([n]);
+
+  // Return all possible substrings of a give string.
+  // callback will be called 2 * str.length if max is unrestricted.
+  var getAllSubStrings = function getAllSubStrings(str, max, callback) {
+    if (!str.length)
+      return;
+
+    var i = Math.min(str.length, max);
+    do {
+      callback(str.substr(0,i));
+    } while (--i);
+
+    if (str.length > 1)
+      getAllSubStrings(str.substr(1), max, callback);
   }
 
   return {
@@ -173,22 +177,17 @@ var WordFreqSync = function WordFreqSync(options) {
 
         // counts all the chunks (and it's substrings) in pendingTerms
         chunks.forEach(function processChunk(chunk) {
-          if (chunk.length === 0)
+          if (chunk.length <= 1)
             return;
 
-          separate(chunk.length, function (separation) {
-            var start = 0;
-            separation.forEach(function (n) {
-              var term = chunk.substr(start, n);
-              if (term.length <= options.maxiumPhraseLength &&
-                  term.length > 1) {
-                if (!(term in pendingTerms))
-                  pendingTerms[term] = 0;
+          getAllSubStrings(chunk, options.maxiumPhraseLength, function (substr) {
+            if (substr.length <= 1)
+              return;
 
-                pendingTerms[term]++;
-              }
-              start += n;
-            });
+            if (!(substr in pendingTerms))
+              pendingTerms[substr] = 0;
+
+            pendingTerms[substr]++;
           });
         });
 
@@ -197,19 +196,14 @@ var WordFreqSync = function WordFreqSync(options) {
         // the longer terms)
         if (options.filterSubstring) {
           for (var term in pendingTerms) {
-            separate(term.length, function (separation) {
-              var start = 0;
-              separation.forEach(function (n) {
-                if (n === term.length)
-                  return;
+            getAllSubStrings(term, options.maxiumPhraseLength, function (substr) {
+              if (term === substr)
+                return;
 
-                var substr = term.substr(start, n);
-                if ((substr in pendingTerms) &&
-                    pendingTerms[substr] === pendingTerms[term]) {
-                  delete pendingTerms[substr];
-                }
-                start += n;
-              });
+              if ((substr in pendingTerms) &&
+                  pendingTerms[substr] === pendingTerms[term]) {
+                delete pendingTerms[substr];
+              }
             });
           }
         }

@@ -76,11 +76,11 @@ test('works on Chinese phrases', function () {
 });
 
 test('works on Chinese phrases and substring phrases', function () {
-  var str = '台北市\n台北市n\台北市\n台北\n台北n\台北';
+  var str = '台北車站\n台北車站\n台北車站\n台北\n台北\n台北';
 
   stop();
   wordfreq.process(str, function (list) {
-    deepEqual(list, [['台北', 6], ['台北市', 3]], 'Passed!');
+    deepEqual(list, [['台北', 6], ['台北車站', 3]], 'Passed!');
 
     start();
   });
