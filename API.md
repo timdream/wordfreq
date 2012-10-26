@@ -17,7 +17,7 @@ Where `options` is an object. Available options:
 
 * `workerUrl`: (`WordFreq` only) Specify the url of `wordfreq.worker.js`.
 * `languages`: Array of keywords to specify languages to process for the instance. Available keywords are `chinese`, `english`. Default to both.
-* `stopWordSets`: Array of keywords to specify the built-in set of stop words to exclude in the count. Available: `cjk`, `english1`. Default to both.
+* `stopWordSets`: Array of keywords to specify the built-in set of stop words to exclude in the count. Available: `cjk`, `english1`, and `english2`. Default to all.
 * `stopWords`: Array of words/phrases to exclude in the count. Case insensitive.
 * `filterSubstring`: (Chinese language only) Filter out the recounted substring. Default to `true`.
 * `maxiumPhraseLength`: (Chinese language only) Maxium length to consider a phrase. Default to `8`.

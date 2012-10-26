@@ -28,7 +28,7 @@ var WordFreqSync = function WordFreqSync(options) {
 
   // fill some defaults
   options.languages = options.languages || ['chinese', 'english'];
-  options.stopWordSets = options.stopWordSets || ['cjk', 'english1'];
+  options.stopWordSets = options.stopWordSets || ['cjk', 'english1', 'english2'];
 
   if (!Array.isArray(options.stopWords)) {
     options.stopWords = [];
@@ -50,10 +50,20 @@ var WordFreqSync = function WordFreqSync(options) {
       case 'english1':
         options.stopWords = options.stopWords.concat([
           'i','a','about', 'an','and','are','as','at',
-          'be','by','com','for', 'from','how','in',
+          'be', 'been','by','com','for', 'from','how','in',
           'is','it','not', 'of','on','or','that',
-          'the','this','to','was', 'what','when','where',
+          'the','this','to','was', 'what','when','where', 'which',
           'who','will','with', 'www','the']);
+        break;
+
+      case 'english2':
+        options.stopWords = options.stopWords.concat([
+          'we', 'us', 'our', 'ours',
+          'they', 'them', 'their', 'he', 'him', 'his',
+          'she', 'her', 'hers', 'it', 'its', 'you', 'yours', 'your',
+          'has', 'have', 'would', 'could', 'should', 'shall',
+          'can', 'may', 'if', 'then', 'else', 'but',
+          'there', 'these', 'those']);
         break;
     }
   });
@@ -62,7 +72,7 @@ var WordFreqSync = function WordFreqSync(options) {
     options.filterSubstring = true;
 
   options.maxiumPhraseLength = options.maxiumPhraseLength || 8;
-  options.minimumCount = options.minimumCount || 3;
+  options.minimumCount = options.minimumCount || 2;
 
 
   // Return all possible substrings of a give string.
@@ -100,7 +110,9 @@ var WordFreqSync = function WordFreqSync(options) {
         words.forEach(function (word) {
           word = word
             .replace(/\.+/g, '.') // replace multiple full stops
-            .replace(/[\'’](s|ll|d|ve)?$/, ''); // get rid of ’ and '
+            .replace(/(.{3,})\./g, '$1') // replace single full stop
+            .replace(/n[\'’]t\b/ig, '') // get rid of ~n't
+            .replace(/[\'’](s|ll|d|ve)?\b/ig, ''); // get rid of ’ and '
 
           // skip if the word is shorter than two characters
           // (i.e. exactly one letter)
