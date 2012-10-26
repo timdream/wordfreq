@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>WordFreq - text corpus calculation in Javascript</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+  <!-- Le styles -->
+  <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.1.1/css/bootstrap-combined.min.css" rel="stylesheet">
+  <style>
+  @media (min-width: 980px) {
+    body { padding-top: 60px; }
+  }
+  textarea {
+    height: 4em;
+    transition: height 0.2s ease 0.5s;
+    -webkit-transition: height 0.2s ease 0.5s; }
+  textarea:focus {
+    height: 20em;
+    transition: height 0.2s ease;
+    -webkit-transition: height 0.2s ease; }
+  select { width: 100%; }
+
+  #result {
+    background: #f0f0f0; padding: 1em;
+    box-sizing: border-box; -moz-box-sizing: border-box;}
+  #result li { display: inline-block; margin-right: 1em; }
+  #result:empty { display: none; }
+
+  #loading { -webkit-animation: blink 2s infinite; }
+  @-webkit-keyframes blink {
+    0% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+  </style>
+  <script type="text/javascript">
+    if (window.location.hostname === 'timdream.org') {
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-4623408-2']);
+      _gaq.push(['_trackPageview']);
+    }
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+
+  </script>
+</head>
+<body>
+  <div class="navbar navbar-fixed-top navbar-inverse">
+    <div class="navbar-inner">
+      <div class="container">
+        <a class="brand" href="./">WordFreq</a>
+        <ul class="nav">
+          <li class="active"><a href="./">Demo</a></li>
+          <li><a href="https://github.com/timdream/wordfreq">Code</a></li>
+          <li><a href="https://github.com/timdream/wordfreq/blob/master/README.md">README</a></li>
+          <li><a href="https://github.com/timdream/wordfreq/blob/master/API.md">API</a></li>
+          <li><a href="http://timdream.org/">timdream</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="container">
+    <p class="lead"><strong>WordFreq</strong> offers <a href="https://en.wikipedia.org/wiki/Text_corpus">text corpus</a> calculation in Javascript. Supports Chinese, English.</p>
+    <div id="not-supported" class="alert" hidden>
+      <strong>Your browser is not supported.</strong>
+    </div>
+    <form id="form" method="get" action="">
+      <textarea id="text-input" autofocus placeholder="Paste your article here..." rows="2" cols="30" class="span12"></textarea>
+      <div class="row">
+        <div class="span6">
+          <button class="btn btn-primary" type="submit">Run</button>
+          <button id="empty-btn" class="btn" type="button">Empty result</button>
+          <span id="loading" hidden>......</span>
+        </div>
+        <div class="span6">
+          <select id="examples" class="">
+            <option selected>Examples</option>
+            <option value="us-independence">US The Declaration of Independence</option>
+            <option value="us-consistution">US Consistution</option>
+            <option value="beiying">朱自清《背影》</option>
+            <option value="yiduijinshouzhuo">琦君《一對金手鐲》</option>
+          </select>
+        </div>
+      </div>
+    </form>
+    <ul id="result" class="lead span12 unstyled"></ul>
+  </div>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+  <script src="./src/wordfreq.js"></script>
+  <script>
+  'use strict';
+
+  jQuery(function ($) {
+    var $form = $('#form');
+    var $text = $('#text-input');
+    var $result = $('#result');
+    var $loading = $('#loading');
+
+    var resultAppendingTimer;
+    var wordfreqOption = { workerUrl: './src/wordfreq.worker.js' };
+    var highestCount;
+    var showList = function showList(list) {
+      $loading.prop('hidden', true);
+      $result.empty();
+      highestCount = list[0] ? list[0][1] : 0;
+
+      // Use native DOM API for speed
+      var docFragment = document.createDocumentFragment();
+      list.forEach(function appendItem(item) {
+        var li = document.createElement('li');
+        li.textContent = item[0];
+        var gray = Math.round(51 +
+                   (194 - 51) * (highestCount - item[1]) / highestCount);
+        li.style.color = 'rgb(' + gray + ',' + gray + ',' + gray + ')';
+        li.title = item[1];
+        docFragment.appendChild(li);
+      });
+      $result.append(docFragment);
+    };
+
+    if (!WordFreq.isSupported || !document.createDocumentFragment) {
+      $('#not-supported').prop('hidden', false);
+      $form.find('textarea, input, select, button').prop('disabled', true);
+      $text.blur();
+      return;
+    }
+
+    $form.on('submit', function formSubmit(evt) {
+      evt.preventDefault();
+
+      $loading.prop('hidden', false);
+      WordFreq(wordfreqOption).process($text.val()).getList(showList);
+      //var wordfreq = WordFreqSync(wordfreqOption);
+      //showList(wordfreq.process($text.val()));
+    });
+
+    $('#empty-btn').on('click', function emptyResult(evt) {
+      clearTimeout(resultAppendingTimer);
+      $result.empty();
+    });
+
+    var $examples = $('#examples');
+
+    $examples.on('change', function loadExample(evt) {
+      var value = $examples.val();
+      $examples[0].selectedIndex = 0;
+
+      $text.val($('#examples-' + value).get(0).innerHTML);
+      $form.submit();
+      $examples.blur();
+    });
+  });
+  </script>
+  <!-- text taken from http://www.archives.gov/exhibits/charters/declaration_transcript.html -->
+  <script id="examples-us-independence" type="text/plain">The unanimous Declaration of the thirteen united States of America,
+
+When in the Course of human events, it becomes necessary for one people to dissolve the political bands which have connected them with another, and to assume among the powers of the earth, the separate and equal station to which the Laws of Nature and of Nature's God entitle them, a decent respect to the opinions of mankind requires that they should declare the causes which impel them to the separation.
+
+We hold these truths to be self-evident, that all men are created equal, that they are endowed by their Creator with certain unalienable Rights, that among these are Life, Liberty and the pursuit of Happiness.--That to secure these rights, Governments are instituted among Men, deriving their just powers from the consent of the governed, --That whenever any Form of Government becomes destructive of these ends, it is the Right of the People to alter or to abolish it, and to institute new Government, laying its foundation on such principles and organizing its powers in such form, as to them shall seem most likely to effect their Safety and Happiness. Prudence, indeed, will dictate that Governments long established should not be changed for light and transient causes; and accordingly all experience hath shewn, that mankind are more disposed to suffer, while evils are sufferable, than to right themselves by abolishing the forms to which they are accustomed. But when a long train of abuses and usurpations, pursuing invariably the same Object evinces a design to reduce them under absolute Despotism, it is their right, it is their duty, to throw off such Government, and to provide new Guards for their future security.--Such has been the patient sufferance of these Colonies; and such is now the necessity which constrains them to alter their former Systems of Government. The history of the present King of Great Britain is a history of repeated injuries and usurpations, all having in direct object the establishment of an absolute Tyranny over these States. To prove this, let Facts be submitted to a candid world.
+
+He has refused his Assent to Laws, the most wholesome and necessary for the public good.
+He has forbidden his Governors to pass Laws of immediate and pressing importance, unless suspended in their operation till his Assent should be obtained; and when so suspended, he has utterly neglected to attend to them.
+He has refused to pass other Laws for the accommodation of large districts of people, unless those people would relinquish the right of Representation in the Legislature, a right inestimable to them and formidable to tyrants only.
+He has called together legislative bodies at places unusual, uncomfortable, and distant from the depository of their public Records, for the sole purpose of fatiguing them into compliance with his measures.
+He has dissolved Representative Houses repeatedly, for opposing with manly firmness his invasions on the rights of the people.
+He has refused for a long time, after such dissolutions, to cause others to be elected; whereby the Legislative powers, incapable of Annihilation, have returned to the People at large for their exercise; the State remaining in the mean time exposed to all the dangers of invasion from without, and convulsions within.
+He has endeavoured to prevent the population of these States; for that purpose obstructing the Laws for Naturalization of Foreigners; refusing to pass others to encourage their migrations hither, and raising the conditions of new Appropriations of Lands.
+He has obstructed the Administration of Justice, by refusing his Assent to Laws for establishing Judiciary powers.
+He has made Judges dependent on his Will alone, for the tenure of their offices, and the amount and payment of their salaries.
+He has erected a multitude of New Offices, and sent hither swarms of Officers to harrass our people, and eat out their substance.
+He has kept among us, in times of peace, Standing Armies without the Consent of our legislatures.
+He has affected to render the Military independent of and superior to the Civil power.
+He has combined with others to subject us to a jurisdiction foreign to our constitution, and unacknowledged by our laws; giving his Assent to their Acts of pretended Legislation:
+For Quartering large bodies of armed troops among us:
+For protecting them, by a mock Trial, from punishment for any Murders which they should commit on the Inhabitants of these States:
+For cutting off our Trade with all parts of the world:
+For imposing Taxes on us without our Consent:
+For depriving us in many cases, of the benefits of Trial by Jury:
+For transporting us beyond Seas to be tried for pretended offences
+For abolishing the free System of English Laws in a neighbouring Province, establishing therein an Arbitrary government, and enlarging its Boundaries so as to render it at once an example and fit instrument for introducing the same absolute rule into these Colonies:
+For taking away our Charters, abolishing our most valuable Laws, and altering fundamentally the Forms of our Governments:
+For suspending our own Legislatures, and declaring themselves invested with power to legislate for us in all cases whatsoever.
+He has abdicated Government here, by declaring us out of his Protection and waging War against us.
+He has plundered our seas, ravaged our Coasts, burnt our towns, and destroyed the lives of our people.
+He is at this time transporting large Armies of foreign Mercenaries to compleat the works of death, desolation and tyranny, already begun with circumstances of Cruelty & perfidy scarcely paralleled in the most barbarous ages, and totally unworthy the Head of a civilized nation.
+He has constrained our fellow Citizens taken Captive on the high Seas to bear Arms against their Country, to become the executioners of their friends and Brethren, or to fall themselves by their Hands.
+He has excited domestic insurrections amongst us, and has endeavoured to bring on the inhabitants of our frontiers, the merciless Indian Savages, whose known rule of warfare, is an undistinguished destruction of all ages, sexes and conditions.
+
+In every stage of these Oppressions We have Petitioned for Redress in the most humble terms: Our repeated Petitions have been answered only by repeated injury. A Prince whose character is thus marked by every act which may define a Tyrant, is unfit to be the ruler of a free people.
+
+Nor have We been wanting in attentions to our Brittish brethren. We have warned them from time to time of attempts by their legislature to extend an unwarrantable jurisdiction over us. We have reminded them of the circumstances of our emigration and settlement here. We have appealed to their native justice and magnanimity, and we have conjured them by the ties of our common kindred to disavow these usurpations, which, would inevitably interrupt our connections and correspondence. They too have been deaf to the voice of justice and of consanguinity. We must, therefore, acquiesce in the necessity, which denounces our Separation, and hold them, as we hold the rest of mankind, Enemies in War, in Peace Friends.
+
+We, therefore, the Representatives of the united States of America, in General Congress, Assembled, appealing to the Supreme Judge of the world for the rectitude of our intentions, do, in the Name, and by Authority of the good People of these Colonies, solemnly publish and declare, That these United Colonies are, and of Right ought to be Free and Independent States; that they are Absolved from all Allegiance to the British Crown, and that all political connection between them and the State of Great Britain, is and ought to be totally dissolved; and that as Free and Independent States, they have full Power to levy War, conclude Peace, contract Alliances, establish Commerce, and to do all other Acts and Things which Independent States may of right do. And for the support of this Declaration, with a firm reliance on the protection of divine Providence, we mutually pledge to each other our Lives, our Fortunes and our sacred Honor.
+  </script>
+  <!-- http://www.archives.gov/exhibits/charters/constitution_transcript.html -->
+  <script id="examples-us-consistution" type="text/plain">The Constitution of the United States
+
+We the People of the United States, in Order to form a more perfect Union, establish Justice, insure domestic Tranquility, provide for the common defence, promote the general Welfare, and secure the Blessings of Liberty to ourselves and our Posterity, do ordain and establish this Constitution for the United States of America.
+
+Article. I.
+
+Section. 1.
+
+All legislative Powers herein granted shall be vested in a Congress of the United States, which shall consist of a Senate and House of Representatives.
+
+Section. 2.
+
+The House of Representatives shall be composed of Members chosen every second Year by the People of the several States, and the Electors in each State shall have the Qualifications requisite for Electors of the most numerous Branch of the State Legislature.
+
+No Person shall be a Representative who shall not have attained to the Age of twenty five Years, and been seven Years a Citizen of the United States, and who shall not, when elected, be an Inhabitant of that State in which he shall be chosen.
+
+Representatives and direct Taxes shall be apportioned among the several States which may be included within this Union, according to their respective Numbers, which shall be determined by adding to the whole Number of free Persons, including those bound to Service for a Term of Years, and excluding Indians not taxed, three fifths of all other Persons. The actual Enumeration shall be made within three Years after the first Meeting of the Congress of the United States, and within every subsequent Term of ten Years, in such Manner as they shall by Law direct. The Number of Representatives shall not exceed one for every thirty Thousand, but each State shall have at Least one Representative; and until such enumeration shall be made, the State of New Hampshire shall be entitled to chuse three, Massachusetts eight, Rhode-Island and Providence Plantations one, Connecticut five, New-York six, New Jersey four, Pennsylvania eight, Delaware one, Maryland six, Virginia ten, North Carolina five, South Carolina five, and Georgia three.
+
+When vacancies happen in the Representation from any State, the Executive Authority thereof shall issue Writs of Election to fill such Vacancies.
+
+The House of Representatives shall chuse their Speaker and other Officers; and shall have the sole Power of Impeachment.
+
+Section. 3.
+
+The Senate of the United States shall be composed of two Senators from each State, chosen by the Legislature thereof for six Years; and each Senator shall have one Vote.
+
+Immediately after they shall be assembled in Consequence of the first Election, they shall be divided as equally as may be into three Classes. The Seats of the Senators of the first Class shall be vacated at the Expiration of the second Year, of the second Class at the Expiration of the fourth Year, and of the third Class at the Expiration of the sixth Year, so that one third may be chosen every second Year; and if Vacancies happen by Resignation, or otherwise, during the Recess of the Legislature of any State, the Executive thereof may make temporary Appointments until the next Meeting of the Legislature, which shall then fill such Vacancies.
+
+No Person shall be a Senator who shall not have attained to the Age of thirty Years, and been nine Years a Citizen of the United States, and who shall not, when elected, be an Inhabitant of that State for which he shall be chosen.
+
+The Vice President of the United States shall be President of the Senate, but shall have no Vote, unless they be equally divided.
+
+The Senate shall chuse their other Officers, and also a President pro tempore, in the Absence of the Vice President, or when he shall exercise the Office of President of the United States.
+
+The Senate shall have the sole Power to try all Impeachments. When sitting for that Purpose, they shall be on Oath or Affirmation. When the President of the United States is tried, the Chief Justice shall preside: And no Person shall be convicted without the Concurrence of two thirds of the Members present.
+
+Judgment in Cases of Impeachment shall not extend further than to removal from Office, and disqualification to hold and enjoy any Office of honor, Trust or Profit under the United States: but the Party convicted shall nevertheless be liable and subject to Indictment, Trial, Judgment and Punishment, according to Law.
+
+Section. 4.
+
+The Times, Places and Manner of holding Elections for Senators and Representatives, shall be prescribed in each State by the Legislature thereof; but the Congress may at any time by Law make or alter such Regulations, except as to the Places of chusing Senators.
+
+The Congress shall assemble at least once in every Year, and such Meeting shall be on the first Monday in December, unless they shall by Law appoint a different Day.
+
+Section. 5.
+
+Each House shall be the Judge of the Elections, Returns and Qualifications of its own Members, and a Majority of each shall constitute a Quorum to do Business; but a smaller Number may adjourn from day to day, and may be authorized to compel the Attendance of absent Members, in such Manner, and under such Penalties as each House may provide.
+
+Each House may determine the Rules of its Proceedings, punish its Members for disorderly Behaviour, and, with the Concurrence of two thirds, expel a Member.
+
+Each House shall keep a Journal of its Proceedings, and from time to time publish the same, excepting such Parts as may in their Judgment require Secrecy; and the Yeas and Nays of the Members of either House on any question shall, at the Desire of one fifth of those Present, be entered on the Journal.
+
+Neither House, during the Session of Congress, shall, without the Consent of the other, adjourn for more than three days, nor to any other Place than that in which the two Houses shall be sitting.
+
+Section. 6.
+
+The Senators and Representatives shall receive a Compensation for their Services, to be ascertained by Law, and paid out of the Treasury of the United States. They shall in all Cases, except Treason, Felony and Breach of the Peace, be privileged from Arrest during their Attendance at the Session of their respective Houses, and in going to and returning from the same; and for any Speech or Debate in either House, they shall not be questioned in any other Place.
+
+No Senator or Representative shall, during the Time for which he was elected, be appointed to any civil Office under the Authority of the United States, which shall have been created, or the Emoluments whereof shall have been encreased during such time; and no Person holding any Office under the United States, shall be a Member of either House during his Continuance in Office.
+
+Section. 7.
+
+All Bills for raising Revenue shall originate in the House of Representatives; but the Senate may propose or concur with Amendments as on other Bills.
+
+Every Bill which shall have passed the House of Representatives and the Senate, shall, before it become a Law, be presented to the President of the United States: If he approve he shall sign it, but if not he shall return it, with his Objections to that House in which it shall have originated, who shall enter the Objections at large on their Journal, and proceed to reconsider it. If after such Reconsideration two thirds of that House shall agree to pass the Bill, it shall be sent, together with the Objections, to the other House, by which it shall likewise be reconsidered, and if approved by two thirds of that House, it shall become a Law. But in all such Cases the Votes of both Houses shall be determined by yeas and Nays, and the Names of the Persons voting for and against the Bill shall be entered on the Journal of each House respectively. If any Bill shall not be returned by the President within ten Days (Sundays excepted) after it shall have been presented to him, the Same shall be a Law, in like Manner as if he had signed it, unless the Congress by their Adjournment prevent its Return, in which Case it shall not be a Law.
+
+Every Order, Resolution, or Vote to which the Concurrence of the Senate and House of Representatives may be necessary (except on a question of Adjournment) shall be presented to the President of the United States; and before the Same shall take Effect, shall be approved by him, or being disapproved by him, shall be repassed by two thirds of the Senate and House of Representatives, according to the Rules and Limitations prescribed in the Case of a Bill.
+
+Section. 8.
+
+The Congress shall have Power To lay and collect Taxes, Duties, Imposts and Excises, to pay the Debts and provide for the common Defence and general Welfare of the United States; but all Duties, Imposts and Excises shall be uniform throughout the United States;
+
+To borrow Money on the credit of the United States;
+
+To regulate Commerce with foreign Nations, and among the several States, and with the Indian Tribes;
+
+To establish an uniform Rule of Naturalization, and uniform Laws on the subject of Bankruptcies throughout the United States;
+
+To coin Money, regulate the Value thereof, and of foreign Coin, and fix the Standard of Weights and Measures;
+
+To provide for the Punishment of counterfeiting the Securities and current Coin of the United States;
+
+To establish Post Offices and post Roads;
+
+To promote the Progress of Science and useful Arts, by securing for limited Times to Authors and Inventors the exclusive Right to their respective Writings and Discoveries;
+
+To constitute Tribunals inferior to the supreme Court;
+
+To define and punish Piracies and Felonies committed on the high Seas, and Offences against the Law of Nations;
+
+To declare War, grant Letters of Marque and Reprisal, and make Rules concerning Captures on Land and Water;
+
+To raise and support Armies, but no Appropriation of Money to that Use shall be for a longer Term than two Years;
+
+To provide and maintain a Navy;
+
+To make Rules for the Government and Regulation of the land and naval Forces;
+
+To provide for calling forth the Militia to execute the Laws of the Union, suppress Insurrections and repel Invasions;
+
+To provide for organizing, arming, and disciplining, the Militia, and for governing such Part of them as may be employed in the Service of the United States, reserving to the States respectively, the Appointment of the Officers, and the Authority of training the Militia according to the discipline prescribed by Congress;
+
+To exercise exclusive Legislation in all Cases whatsoever, over such District (not exceeding ten Miles square) as may, by Cession of particular States, and the Acceptance of Congress, become the Seat of the Government of the United States, and to exercise like Authority over all Places purchased by the Consent of the Legislature of the State in which the Same shall be, for the Erection of Forts, Magazines, Arsenals, dock-Yards, and other needful Buildings;--And
+
+To make all Laws which shall be necessary and proper for carrying into Execution the foregoing Powers, and all other Powers vested by this Constitution in the Government of the United States, or in any Department or Officer thereof.
+
+Section. 9.
+
+The Migration or Importation of such Persons as any of the States now existing shall think proper to admit, shall not be prohibited by the Congress prior to the Year one thousand eight hundred and eight, but a Tax or duty may be imposed on such Importation, not exceeding ten dollars for each Person.
+
+The Privilege of the Writ of Habeas Corpus shall not be suspended, unless when in Cases of Rebellion or Invasion the public Safety may require it.
+
+No Bill of Attainder or ex post facto Law shall be passed.
+
+No Capitation, or other direct, Tax shall be laid, unless in Proportion to the Census or enumeration herein before directed to be taken.
+
+No Tax or Duty shall be laid on Articles exported from any State.
+
+No Preference shall be given by any Regulation of Commerce or Revenue to the Ports of one State over those of another; nor shall Vessels bound to, or from, one State, be obliged to enter, clear, or pay Duties in another.
+
+No Money shall be drawn from the Treasury, but in Consequence of Appropriations made by Law; and a regular Statement and Account of the Receipts and Expenditures of all public Money shall be published from time to time.
+
+No Title of Nobility shall be granted by the United States: And no Person holding any Office of Profit or Trust under them, shall, without the Consent of the Congress, accept of any present, Emolument, Office, or Title, of any kind whatever, from any King, Prince, or foreign State.
+
+Section. 10.
+
+No State shall enter into any Treaty, Alliance, or Confederation; grant Letters of Marque and Reprisal; coin Money; emit Bills of Credit; make any Thing but gold and silver Coin a Tender in Payment of Debts; pass any Bill of Attainder, ex post facto Law, or Law impairing the Obligation of Contracts, or grant any Title of Nobility.
+
+No State shall, without the Consent of the Congress, lay any Imposts or Duties on Imports or Exports, except what may be absolutely necessary for executing it's inspection Laws: and the net Produce of all Duties and Imposts, laid by any State on Imports or Exports, shall be for the Use of the Treasury of the United States; and all such Laws shall be subject to the Revision and Controul of the Congress.
+
+No State shall, without the Consent of Congress, lay any Duty of Tonnage, keep Troops, or Ships of War in time of Peace, enter into any Agreement or Compact with another State, or with a foreign Power, or engage in War, unless actually invaded, or in such imminent Danger as will not admit of delay.
+
+Article. II.
+
+Section. 1.
+
+The executive Power shall be vested in a President of the United States of America. He shall hold his Office during the Term of four Years, and, together with the Vice President, chosen for the same Term, be elected, as follows:
+
+Each State shall appoint, in such Manner as the Legislature thereof may direct, a Number of Electors, equal to the whole Number of Senators and Representatives to which the State may be entitled in the Congress: but no Senator or Representative, or Person holding an Office of Trust or Profit under the United States, shall be appointed an Elector.
+
+The Electors shall meet in their respective States, and vote by Ballot for two Persons, of whom one at least shall not be an Inhabitant of the same State with themselves. And they shall make a List of all the Persons voted for, and of the Number of Votes for each; which List they shall sign and certify, and transmit sealed to the Seat of the Government of the United States, directed to the President of the Senate. The President of the Senate shall, in the Presence of the Senate and House of Representatives, open all the Certificates, and the Votes shall then be counted. The Person having the greatest Number of Votes shall be the President, if such Number be a Majority of the whole Number of Electors appointed; and if there be more than one who have such Majority, and have an equal Number of Votes, then the House of Representatives shall immediately chuse by Ballot one of them for President; and if no Person have a Majority, then from the five highest on the List the said House shall in like Manner chuse the President. But in chusing the President, the Votes shall be taken by States, the Representation from each State having one Vote; A quorum for this purpose shall consist of a Member or Members from two thirds of the States, and a Majority of all the States shall be necessary to a Choice. In every Case, after the Choice of the President, the Person having the greatest Number of Votes of the Electors shall be the Vice President. But if there should remain two or more who have equal Votes, the Senate shall chuse from them by Ballot the Vice President.
+
+The Congress may determine the Time of chusing the Electors, and the Day on which they shall give their Votes; which Day shall be the same throughout the United States.
+
+No Person except a natural born Citizen, or a Citizen of the United States, at the time of the Adoption of this Constitution, shall be eligible to the Office of President; neither shall any Person be eligible to that Office who shall not have attained to the Age of thirty five Years, and been fourteen Years a Resident within the United States.
+
+In Case of the Removal of the President from Office, or of his Death, Resignation, or Inability to discharge the Powers and Duties of the said Office, the Same shall devolve on the Vice President, and the Congress may by Law provide for the Case of Removal, Death, Resignation or Inability, both of the President and Vice President, declaring what Officer shall then act as President, and such Officer shall act accordingly, until the Disability be removed, or a President shall be elected.
+
+The President shall, at stated Times, receive for his Services, a Compensation, which shall neither be increased nor diminished during the Period for which he shall have been elected, and he shall not receive within that Period any other Emolument from the United States, or any of them.
+
+Before he enter on the Execution of his Office, he shall take the following Oath or Affirmation:--"I do solemnly swear (or affirm) that I will faithfully execute the Office of President of the United States, and will to the best of my Ability, preserve, protect and defend the Constitution of the United States."
+
+Section. 2.
+
+The President shall be Commander in Chief of the Army and Navy of the United States, and of the Militia of the several States, when called into the actual Service of the United States; he may require the Opinion, in writing, of the principal Officer in each of the executive Departments, upon any Subject relating to the Duties of their respective Offices, and he shall have Power to grant Reprieves and Pardons for Offences against the United States, except in Cases of Impeachment.
+
+He shall have Power, by and with the Advice and Consent of the Senate, to make Treaties, provided two thirds of the Senators present concur; and he shall nominate, and by and with the Advice and Consent of the Senate, shall appoint Ambassadors, other public Ministers and Consuls, Judges of the supreme Court, and all other Officers of the United States, whose Appointments are not herein otherwise provided for, and which shall be established by Law: but the Congress may by Law vest the Appointment of such inferior Officers, as they think proper, in the President alone, in the Courts of Law, or in the Heads of Departments.
+
+The President shall have Power to fill up all Vacancies that may happen during the Recess of the Senate, by granting Commissions which shall expire at the End of their next Session.
+
+Section. 3.
+
+He shall from time to time give to the Congress Information of the State of the Union, and recommend to their Consideration such Measures as he shall judge necessary and expedient; he may, on extraordinary Occasions, convene both Houses, or either of them, and in Case of Disagreement between them, with Respect to the Time of Adjournment, he may adjourn them to such Time as he shall think proper; he shall receive Ambassadors and other public Ministers; he shall take Care that the Laws be faithfully executed, and shall Commission all the Officers of the United States.
+
+Section. 4.
+
+The President, Vice President and all civil Officers of the United States, shall be removed from Office on Impeachment for, and Conviction of, Treason, Bribery, or other high Crimes and Misdemeanors.
+
+Article III.
+
+Section. 1.
+
+The judicial Power of the United States shall be vested in one supreme Court, and in such inferior Courts as the Congress may from time to time ordain and establish. The Judges, both of the supreme and inferior Courts, shall hold their Offices during good Behaviour, and shall, at stated Times, receive for their Services a Compensation, which shall not be diminished during their Continuance in Office.
+
+Section. 2.
+
+The judicial Power shall extend to all Cases, in Law and Equity, arising under this Constitution, the Laws of the United States, and Treaties made, or which shall be made, under their Authority;--to all Cases affecting Ambassadors, other public Ministers and Consuls;--to all Cases of admiralty and maritime Jurisdiction;--to Controversies to which the United States shall be a Party;--to Controversies between two or more States;-- between a State and Citizens of another State,--between Citizens of different States,--between Citizens of the same State claiming Lands under Grants of different States, and between a State, or the Citizens thereof, and foreign States, Citizens or Subjects.
+
+In all Cases affecting Ambassadors, other public Ministers and Consuls, and those in which a State shall be Party, the supreme Court shall have original Jurisdiction. In all the other Cases before mentioned, the supreme Court shall have appellate Jurisdiction, both as to Law and Fact, with such Exceptions, and under such Regulations as the Congress shall make.
+
+The Trial of all Crimes, except in Cases of Impeachment, shall be by Jury; and such Trial shall be held in the State where the said Crimes shall have been committed; but when not committed within any State, the Trial shall be at such Place or Places as the Congress may by Law have directed.
+
+Section. 3.
+
+Treason against the United States, shall consist only in levying War against them, or in adhering to their Enemies, giving them Aid and Comfort. No Person shall be convicted of Treason unless on the Testimony of two Witnesses to the same overt Act, or on Confession in open Court.
+
+The Congress shall have Power to declare the Punishment of Treason, but no Attainder of Treason shall work Corruption of Blood, or Forfeiture except during the Life of the Person attainted.
+
+Article. IV.
+
+Section. 1.
+
+Full Faith and Credit shall be given in each State to the public Acts, Records, and judicial Proceedings of every other State. And the Congress may by general Laws prescribe the Manner in which such Acts, Records and Proceedings shall be proved, and the Effect thereof.
+
+Section. 2.
+
+The Citizens of each State shall be entitled to all Privileges and Immunities of Citizens in the several States.
+
+A Person charged in any State with Treason, Felony, or other Crime, who shall flee from Justice, and be found in another State, shall on Demand of the executive Authority of the State from which he fled, be delivered up, to be removed to the State having Jurisdiction of the Crime.
+
+No Person held to Service or Labour in one State, under the Laws thereof, escaping into another, shall, in Consequence of any Law or Regulation therein, be discharged from such Service or Labour, but shall be delivered up on Claim of the Party to whom such Service or Labour may be due.
+
+Section. 3.
+
+New States may be admitted by the Congress into this Union; but no new State shall be formed or erected within the Jurisdiction of any other State; nor any State be formed by the Junction of two or more States, or Parts of States, without the Consent of the Legislatures of the States concerned as well as of the Congress.
+
+The Congress shall have Power to dispose of and make all needful Rules and Regulations respecting the Territory or other Property belonging to the United States; and nothing in this Constitution shall be so construed as to Prejudice any Claims of the United States, or of any particular State.
+
+Section. 4.
+
+The United States shall guarantee to every State in this Union a Republican Form of Government, and shall protect each of them against Invasion; and on Application of the Legislature, or of the Executive (when the Legislature cannot be convened), against domestic Violence.
+
+Article. V.
+
+The Congress, whenever two thirds of both Houses shall deem it necessary, shall propose Amendments to this Constitution, or, on the Application of the Legislatures of two thirds of the several States, shall call a Convention for proposing Amendments, which, in either Case, shall be valid to all Intents and Purposes, as Part of this Constitution, when ratified by the Legislatures of three fourths of the several States, or by Conventions in three fourths thereof, as the one or the other Mode of Ratification may be proposed by the Congress; Provided that no Amendment which may be made prior to the Year One thousand eight hundred and eight shall in any Manner affect the first and fourth Clauses in the Ninth Section of the first Article; and that no State, without its Consent, shall be deprived of its equal Suffrage in the Senate.
+
+Article. VI.
+
+All Debts contracted and Engagements entered into, before the Adoption of this Constitution, shall be as valid against the United States under this Constitution, as under the Confederation.
+
+This Constitution, and the Laws of the United States which shall be made in Pursuance thereof; and all Treaties made, or which shall be made, under the Authority of the United States, shall be the supreme Law of the Land; and the Judges in every State shall be bound thereby, any Thing in the Constitution or Laws of any State to the Contrary notwithstanding.
+
+The Senators and Representatives before mentioned, and the Members of the several State Legislatures, and all executive and judicial Officers, both of the United States and of the several States, shall be bound by Oath or Affirmation, to support this Constitution; but no religious Test shall ever be required as a Qualification to any Office or public Trust under the United States.
+
+Article. VII.
+
+The Ratification of the Conventions of nine States, shall be sufficient for the Establishment of this Constitution between the States so ratifying the Same.
+
+The Word, "the," being interlined between the seventh and eighth Lines of the first Page, the Word "Thirty" being partly written on an Erazure in the fifteenth Line of the first Page, The Words "is tried" being interlined between the thirty second and thirty third Lines of the first Page and the Word "the" being interlined between the forty third and forty fourth Lines of the second Page.
+
+Attest William Jackson Secretary
+
+done in Convention by the Unanimous Consent of the States present the Seventeenth Day of September in the Year of our Lord one thousand seven hundred and Eighty seven and of the Independance of the United States of America the Twelfth In witness whereof We have hereunto subscribed our Names,
+</script>
+<!-- http://wikilivres.ca/wiki/%E8%83%8C%E5%BD%B1 -->
+<script id="examples-beiying" type="text/plain">我與父親不相見已有二年餘了，我最不能忘記的是他的背影。那年冬天，祖母死了，父親的差使也交卸了，正是禍不單行的日子，我從北京到徐州，打算跟著父親奔喪回家。到徐州見著父親，看見滿院狼籍的東西，又想起祖母，不禁簌簌地流下眼淚。
+
+父親說，「事已如此，不必難過，好在天無絕人之路！」
+
+回家變賣典質，父親還了虧空；又借錢辦了喪事。這些日子，家中光景很是慘淡，一半為了喪事，一半為了父親賦閒。喪事完畢，父親要到南京謀事，我也要回到北京唸書，我們便同行。
+
+到南京時，有朋友約去遊逛，勾留了一日；第二日上午便須渡江到浦口，下午上車北去。父親因為事忙，本已說定不送我，叫旅館裏一個熟識的茶房陪我同去。他再三囑咐茶房，甚是仔細。但他終於不放心，怕茶房不妥貼；頗躊躇了一會。其實我那年已二十歲，北京已來往過兩三次，是沒有甚麼要緊的了。他躊躇了一會，終於決定還是自己送我去。我兩三回勸他不必去；他只說，「不要緊，他們去不好！」
+
+我們過了江，進了車站。我買票，他忙著照看行李。行李太多了，得向腳夫行些小費，才可過去。他便又忙著和他們講價錢。我那時真是聰明過分，總覺他說話不大漂亮，非自己插嘴不可。但他終於講定了價錢；就送我上車。他給我揀定了靠車門的一張椅子；我將他給我做的紫毛大衣鋪好坐位。他囑我路上小心，夜裏要警醒些，不要受涼。又囑托茶房好好照應我。我心裏暗笑他的迂；他們只認得錢，托他們直是白托！而且我這樣大年紀的人，難道還不能料理自己麼？唉，我現在想想，那時真是太聰明了。
+
+我說道，「爸爸，你走吧。」他往車外看了看，說，「我買幾個桔子去。你就在此地，不要走動。」我看那邊月台的柵欄外有幾個賣東西的等著顧客。走到那邊月台，須穿過鐵道，須跳下去又爬上去。父親是一個胖子，走過去自然要費事些。我本來要去的，他不肯，只好讓他去。我看見他戴著黑布小帽，穿著黑布大馬褂，深青布棉袍，蹣跚地走到鐵道邊，慢慢探身下去，尚不大難。可是他穿過鐵道，要爬上那邊月台，就不容易了。他用兩手攀著上面，兩腳再向上縮；他肥胖的身子向左微傾，顯出努力的樣子。這時我看見他的背影，我的淚很快地流下來了。我趕緊拭乾了淚，怕他看見，也怕別人看見。我再向外看時，他已抱了朱紅的桔子往回走了。過鐵道時，他先將桔子散放在地上，自己慢慢爬下，再抱起桔子走。到這邊時，我趕緊去攙他。他和我走到車上，將桔子一股腦兒放在我的皮大衣上。於是撲撲衣上的泥土，心裏很輕鬆似的，過一會說，「我走了，到那邊來信！」我望著他走出去。他走了幾步，回過頭看見我，說，「進去吧，裏邊沒人。」等他的背影混入來來往往的人裏，再找不著了，我便進來坐下，我的眼淚又來了。
+
+近幾年來，父親和我都是東奔西走，家中光景是一日不如一日。他少年出外謀生，獨立支持，做了許多大事。哪知老境卻如此頹唐！他觸目傷懷，自然情不能自已。情鬱於中，自然要發之於外；家庭瑣屑便往往觸他之怒。他待我漸漸不同往日。但最近兩年不見，他終於忘卻我的不好，只是惦記著我，惦記著我的兒子。我北來後，他寫了一封信給我，信中說道，「我身體平安，惟膀子疼痛利害，舉箸提筆，諸多不便，大約大去之期不遠矣。」我讀到此處，在晶瑩的淚光中，又看見那肥胖的，青布棉袍，黑布馬褂的背影。唉！我不知何時再能與他相見！
+
+1925年10月在北京
+</script>
+<script id="examples-yiduijinshouzhuo" type="text/plain">我心中一直有一對手鐲，是軟軟的赤金色，一隻套在我自己手腕上，另一隻套在一位異姓姊姊卻親如同胞的手腕上。
+
+她是我乳娘的女兒阿月，和我同年同月生，她是月半，我是月底，所以他就取名阿月。母親告訴我說：週歲前後，這一對「雙胞胎」救被擁抱在同一位慈母懷中，揮舞著四隻小拳頭，對踢著兩雙小胖腿，吮吸豐富的乳汁。是因為母親沒有奶水，把我託付給三十里外鄉村的乳娘，吃奶以外，每天一人半個鹹鴨蛋，一大碗厚粥，長得又黑又胖，一歲半以後，伯母堅持把我抱回來，不久就隨母親被接到杭州。這一對「雙胞姊妹」就此分了手。臨行時，母親把舅母送我的一對金手鐲取出來，一隻套在阿月的手上，一隻套在我手上，母親說：「兩姐妹都長命百歲。」
+
+到了杭州，大伯看我像黑炭團，塌鼻梁加上鬥雞眼，問伯母是不是錯把乳娘的女兒抱回來了。伯母生氣地說：「她親娘隔半個月都去看她一次，怎麼會錯？誰捨得把親生女兒給了別人？」母親解釋說：「小東西天天坐在泥地裡吹風晒太陽，怎麼不黑？鬥雞眼嘛，一定是兩個對坐著，白天看公雞打架，晚上看菜油燈花，把眼睛看鬥了，阿月也是鬥的呀。」說得大家都笑了。我漸漸長大，皮膚不那麼黑了，眼睛也不鬥了，伯母得意地說：「女大十八變，說不定將來還會變觀音面哩。」可是我就究竟是我還是阿月，仍常常被伯母和母親當笑話談論著。每回一說起，我就吵著要回家鄉看雙胞姊姊阿月。
+
+七月時，母親帶我回家鄉，第一件事就是去看阿月，把我們兩個人誰是誰搞個清楚。乳娘一見我，眼淚撲漱漱直掉，我心裡納悶，你為什麼哭，難道我真是你的女兒嗎？我和阿月各自依在母親懷中，遠遠地對望著，彼此都完全不認識了。我把她從頭看到腳，覺得她沒我穿得漂亮，皮膚比我黑，鼻子比我還扁，只是一雙眼睛比我大，直瞪著我看。乳娘過來抱我，問我記不記得吃奶的事，還絮絮叨叨說了好多話，我都記不得了。那時心裡只有一個疑團，一定要直接跟阿月講。吃了雞蛋粉絲，兩個人不再那麼陌生了，阿月拉著我到後門外矮牆頭坐下來。她摸摸我的粗辦子說：「你的頭髮好烏啊。」我也摸摸她細細黃黃的辮子說：「你的辮子像泥鰍。」她啜了下嘴說：「我沒有生髮油抹呀。」我連忙從口袋裡摸出個小小瓶子遞給她說：「呶，給你，香水精。」她問：「是抹頭髮的嗎？」我說「頭髮、臉上、手上都抹，好香啊。」她笑了，她的門牙也掉了兩顆，跟我一樣。我頓時高興起來，拉著她的手說：「阿月，媽媽常說我們兩個換錯了，你是我，我是你。」她楞楞地說：「你說什麼我不懂。」我說：「我們一對不是像雙胞胎嗎？大媽和乳娘都搞不清楚是誰了，也許你應當到我家去。」她呆了好半天，忽然大聲地喊：「你胡說，你胡說，我不跟你玩了。」就掉頭飛奔而去，把我丟在後門外，我駭得哭起來了。母親跑來帶我進去，怪我做客人怎麼跟姊姊吵架，我愈想愈傷心，哭得抽抽噎噎的說不出話來。乳娘也怪阿月，並說：「你看小春如今是官家小姐了多斯文呀。」聽她這麼說，我心裡好急，我不要做官家小姐，我只要跟阿月好。阿月鼓著腮，還是好生氣的樣子。母親把她和我都拉到懷裡，捏捏阿月的胖手，她手上戴的是一隻銀鐲子，我戴的是一雙金手鐲，母親從我手上脫下一隻，套在阿月手上說：「你們是親姊妹，這對金手鐲，還是一人一隻。」我當然已經不記得第一對金手鐲了。乳娘說：「以前那隻金手鐲，我收起來等她出嫁時給她戴。」阿月低下頭，摸摸金手鐲，它撞著銀手鐲叮叮作響，乳娘從藍衫裡掏了半天，掏出一個黑布包，打開取出一塊亮晃晃的銀元，遞給我說：「小春，乳娘給你買糖吃。」我接在手心裡，還是暖烘烘的，眼睛看著阿月，阿月忽然笑了。我好開心。兩個人再手牽手出去玩，我再也不敢提「兩個人搞錯」那句話了。
+
+我在家呆到十二歲才再去杭州，但和阿月卻不能時常在一起玩。一來因為路遠，二來她要幫媽媽種田、砍材、挑水、餵豬，做好多好多的事，而我天天要背古文、論語、孟子，不能自由自在地跑去找阿月玩。不過逢年過節，不是她來就是我去。我們兩個肚子都吃得鼓鼓的跟蜜蜂似的，彼此互贈了好多禮物：她送我用花布包著樹枝的坑姑娘（鄉下女孩子自製的玩偶）、小溪裡撿來均勻的圓卵石、細竹枝編的戒子與項圈；我送她大英牌香煙盒、水鑽髮夾、印花手帕；她教我用指甲花搗出汁來染指甲。兩個人難得在一起，真是玩不厭的玩，說不玩的說。可是我一回到杭州以後，彼此就斷了音信。她不認得字，不會寫信。我有了新同學也就很少想到她。有一次聽英文老師講馬克．吐溫的雙胞弟弟在水裡淹死了，馬克．吐溫說：「淹死的不知是我還是弟弟。」全課堂都笑了。我忽然想起阿月來，寫封信給她也沒有回音。分開太久，是不容易一直記掛著一個人的。但每當整理抽屜，看見阿月送我的那些小玩意時，心裡就有點悵悵惘惘的。年紀一天天長大，尤其自己沒有年齡接近的姊妹，就不由得時時想起她來。母親雙鬢已斑，乳娘更顯得白髮蒼顏。乳娘緊握我雙手，她的手是那麼的粗糙，那麼的溫暖。她眼中淚水又滾落，只是喃喃地說：「回來了好，回來了好，總算我還能看到你。」我鼻子一酸，也忍不住哭了。阿月早已遠嫁，正值農忙，不能馬上來看我。十多天後，我才見到渴望中的阿月。她背上背著一個孩子，懷中抱著一個孩子，一襲花布衫褲，像泥鰍似的辮子已經翹翹的盤在後腦，。原來十八歲的女孩已經是兩個孩子的母親了。我一眼看見她左手腕戴著那隻金手鐲。而我卻嫌土氣沒有戴，心裡很慚愧。她竟喊了我一聲：「大小姐，多年不見了」。我連忙說：「我們是姊妹，你怎麼喊我大小姐？」乳娘說：「長大了要有規矩。」我說：「我們不一樣，我們是吃您奶長大的。」乳娘說：「阿月的命沒你好，她十四歲就做了養媳婦，如今都是兩個女兒的娘了。只巴望她肚子爭氣，快快生個兒子。」我聽了心裡好難過，不知怎麼回答才好，只得說請她們隨我母親一同去杭州玩。乳娘連連搖頭說：「種田人家那裡走得開？也沒這筆盤纏呀。」我回頭看看母親，母親嘆口氣，也搖了下頭，原來連母親自己也不想再去杭州，我感到一陣茫然。
+
+當晚我和阿月並肩躺在大床上，把兩個孩子放在當中，我們一面拍著孩子，一面瑣瑣屑屑地聊著別後的情形。她講起婆婆嫌她只會生女兒就掉眼淚，講起丈夫，倒露出一臉含情脈脈的嬌羞，真祝望她婚姻美滿。我也講學校裡一些有趣頑皮的故事給她聽，她有時咯咯的笑，有時眨著一雙大眼睛出神，好像沒聽進去。我忽然覺得我們雖然靠得那麼近，卻完全生活在兩個世界裡，我們不可能再像第一次回家鄉時那樣一同玩樂了。我跟她說話的時候，都得想一些比較普通，不那麼文謅謅的字眼來說，不能像跟同學一樣，嘻嘻哈哈，說什麼馬上就懂。我呆呆地看著她的金手鐲，在橙黃的菜油燈光裡微微閃著亮光。她愛惜地摸了下手鐲，自言自語著：「這隻手鐲，是你小時回來那次，太太給我的。週歲給的那隻已經賣掉了。因為爸爸生病，沒錢買藥。」她說的太太指的是我母親。我聽她這樣稱呼，覺得我們之間的距離又遠了，只是呆呆地望著她沒作聲。她又說：「爸爸還是救不活，那時你已去了杭州，只想告訴你卻不會寫信。」她爸爸什麼樣子，一點印象都沒有，只是替阿月難過。我問她：「你為什麼這麼早就出嫁？」她笑了笑說：「不是出嫁，是我媽叫我過去的。公公婆婆借錢給媽做墳，婆婆看著我還會幫著做事，就要了我。」說這些話的時候，她的眼睛一直半開半閉的，好像在講一個故事。過了一會兒，她睜開眼來，看看我的手說：「你的那隻金手鐲呢？為什麼不戴？」我有點愧赧，訕訕地說：「收著呢，因為上學不能戴，也就不戴了。」她嘆了口氣說：「你真命好去上學，我是個鄉下女人。媽說的一點不錯，一個人註下的命，就像釘下的秤，一點沒得翻悔。」我說：「命好不好是由自己爭的。」她說：「怎麼跟命爭呢？」她神情有點黯淡，卻仍舊笑嘻嘻的。我想如果不是自己一同吃她母親的奶，她也不會有這種比較的心理，所以還是別把這一類的話跟她說得太多，免得她知道太多了，以後心裡會不快樂的。人生的際遇各自不同，我們雖同在一個懷抱中吃奶，我卻因家庭背景不同，有機會受教育。她呢？能安安分分，快快樂樂地做個孝順媳婦，勤勞妻子，生兒育女的慈愛母親，就是她一生的幸福了。我雖然知道和她生活環境距離將日益遙遠，但我們的心還是緊緊靠在一起，彼此相通的。因為我們是「雙胞姊妹」，我很吮吸過同一位母親的乳汁，我們的身體裡流著相同成分的血液，我們承受的是同等的愛。想著這些，我忽然止不住淚水紛紛地滾落。因為我即將當杭州續學，雖然有許多同學，卻沒有一個曾經拳頭碰拳頭，腳碰腳的同胞姊妹。可是我又有什麼能力接阿月母女到杭州同住呢？
+
+嬰兒哭啼了，阿月把她抱在懷裡，解開大襟給她餵奶。一手輕輕拍著，眼睛全心全意地注視著嬰兒，一臉滿足的眼神。我真難以相信，眼前這個比我只大半個月的少女，曾幾何時，已經是一位完完全全成熟的母親。而我呢？除了啃書本，就只會跟母親彆扭，跟自己生氣，我感到滿心的慚愧。
+
+阿月已很疲倦，拍著孩子睡著了。鄉下沒有電燈，屋子裡暗洞洞的。只有床邊菜油燈微弱的燈花搖曳著。照著阿月手腕上黃澄澄的金手鐲。我想起母親常常說，兩個孩子對著燈花把眼睛看鬥了的笑話，也想起小時回故鄉，母親把我手上一隻金手鐲脫下，套在阿月手上時慈祥的眼神，真覺得我和阿月是緊緊扣在一起的。我望著菜油燈燈盞裡兩根燈草心，緊緊靠在一起，一同吸著油，燃出一朵燈花，無論多麼微小，也是一朵完整的燈花。我覺得和阿月正是那朵燈花，持久地散發著溫和的光和熱。
+
+阿月第二天就帶著孩子匆匆回去了。仍舊背上背著大的，懷裡摟著小的，一個小小的婦人，顯得那麼堅強那麼能負重任。我摸摸兩個孩子的臉，大的向我咧嘴一笑，嬰兒睡得好甜，我把臉頰親過去，一股子奶香，陡然使我感到自己也長大了。我說：「阿月，等我大學畢業，做事掙了錢，一定接妳去杭州玩一趟。」阿月笑笑，大眼睛潤濕了。母親忽然想起一件事來，急急跑上樓，取來一樣東西，原來是一個小小的銀質鈴鐺，她用一段紅頭繩把它繫在嬰兒手膀上。說：「這是小春小時候戴的，給她吧。等你生了兒子，再給你打個金鎖片。」母親永遠是那般仁慈、細心。
+
+我再回到杭州以後，就不時取出金手鐲，套在手臂上對著鏡子看一回，又取下來收在盒子裡。這時候，金手鐲對我來說，已不僅僅是一件紀念物，而是緊緊扣住我和阿月這一對「雙胞姊妹」的一樣麼得著、看得見的東西。我怎麼能不寶愛它呢？
+
+可是戰時肄業大學，學費無著，以及畢業後轉徙流離，為了生活，萬不得已中，金手鐲竟被我一分分、一錢錢地剪去變賣，化作金錢救急。到台灣之初，我化去了金手鐲的最後一錢，記得當我拿到銀樓去換現款的時候，竟是一點感觸也沒有，難道是離亂喪亡，已使此心麻木不仁了？
+
+與阿月一別已將半世紀，母親去世已三十五年，乳娘想亦不在人間，金手鐲也化為烏有了。可是年光老去，忘不掉的是點滴舊事，忘不掉的是夢寐中的親人。阿月，他現在究竟在那裡？她過的是什麼樣的日子呢？她的孩子又怎樣了呢？她那隻金手鐲還能戴在手上嗎？
+但是，無論如何，我心中總有一對金手鐲，一隻套在我自己手上，一隻套在阿月手上，那是母親為我們套上的。
+</script>
+</body>
+</html>
