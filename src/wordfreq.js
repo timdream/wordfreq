@@ -20,6 +20,11 @@ var WordFreq = function WordFreq(options) {
   var worker = new Worker(options.workerUrl);
 
   // message queue
+  // Note: since Javascript Web Workers itself is a single threaded
+  // first-in-first-out event queue, the management here
+  // (send the next message only till the current one is processed)
+  // seems to be an overkill. This should be written if we are sure of
+  // the behavior is reliable.
   var messageQueue = [];
   var message;
 
