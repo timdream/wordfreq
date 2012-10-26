@@ -38,7 +38,6 @@ var WordFreqSync = function WordFreqSync(options) {
     switch (stopWordSet) {
       case 'cjk':
         options.stopWords = options.stopWords.concat([
-          '([^\u76ee])\u7684', /* Chinese 'de' */
           '\u3092', /* Japanese wo */
           '\u3067\u3059', /* Japanese desu */
           '\u3059\u308b', /* Japanese suru */
