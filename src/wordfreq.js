@@ -46,6 +46,10 @@ var WordFreq = function WordFreq(options) {
       method: message.method,
       params: message.params
     });
+
+    // Remove thing that is not needed anymore.
+    delete message.method;
+    delete message.params;
   };
   // process message received from worker
   worker.onmessage = function gotMessage(evt) {
