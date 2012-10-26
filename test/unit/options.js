@@ -16,7 +16,6 @@ test('languages can be set to Chinese', function () {
   wordfreq.process(text, function (list) {
     deepEqual(list, [['中文', 3]], 'Passed!');
 
-    wordfreq.stop();
     start();
   });
 });
@@ -33,7 +32,6 @@ test('languages can be set to English', function () {
   wordfreq.process(text, function (list) {
     deepEqual(list, [['English', 3]], 'Passed!');
 
-    wordfreq.stop();
     start();
   });
 });
@@ -53,7 +51,6 @@ test('stopWordSets can be set', function () {
   wordfreq.process(text, function (list) {
     deepEqual(list, [['happy', 3], ['was', 3]], 'Passed!');
 
-    wordfreq.stop();
     start();
   });
 });
@@ -72,7 +69,6 @@ test('stopWords can be set', function () {
   wordfreq.process(text, function (list) {
     deepEqual(list, [['too', 3]], 'Passed!');
 
-    wordfreq.stop();
     start();
   });
 });
@@ -90,7 +86,6 @@ test('minimumCount can be set', function () {
   wordfreq.process(text, function (list) {
     deepEqual(list, [['happy', 1], ['too', 1], ['中文', 1]], 'Passed!');
 
-    wordfreq.stop();
     start();
   });
 });
@@ -107,7 +102,6 @@ test('filterSubstring can be turned off for Chinese', function () {
   wordfreq.process(text, function (list) {
     deepEqual(list, [['杉磯', 3], ['洛杉', 3], ['洛杉磯', 3]], 'Passed!');
 
-    wordfreq.stop();
     start();
   });
 });
@@ -123,7 +117,6 @@ test('maxiumPhraseLength can be set for Chinese', function () {
   wordfreq.process(text, function (list) {
     deepEqual(list, [['杉磯', 3], ['洛杉', 3]], 'Passed!');
 
-    wordfreq.stop();
     start();
   });
 });

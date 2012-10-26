@@ -11,7 +11,6 @@ module('wordfreq.get*()', {
     });
   },
   teardown: function () {
-    wordfreq.stop();
     wordfreq = null;
   }
 });

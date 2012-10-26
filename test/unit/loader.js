@@ -19,7 +19,6 @@ module('WordFreq functions', {
     });
   },
   teardown: function () {
-    wordfreq.stop();
     wordfreq = null;
   }
 });
