@@ -39,6 +39,7 @@ Empty the list. Returns `true` to callback.
 ### stop(triggerCallbacks)
 
 Terminate the worker and remove all the pending works.
+Once terminated, the instance should be discorded as it will not respond to any new queries.
 
 If `triggerCallbacks` is set to `true`, trigger all pending callbacks without arguments. Callbacks must not attempt to append a new task when called; doing so will result a loop.
 

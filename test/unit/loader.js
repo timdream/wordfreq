@@ -43,11 +43,33 @@ test('wordfreq.stop function exists', function () {
   equal(typeof wordfreq.stop, 'function', 'Passed!');
 });
 
-test('wordfreq.stop() stops the execution', function () {
-  wordfreq.process('').stop().getList(function () {
+test('wordfreq.stop() can be called', function () {
+  wordfreq.process('english english english').stop();
+  ok(true, 'Passed!');
+});
 
+test('wordfreq.stop() can be run within the callback', function () {
+  stop();
+  wordfreq.process('english english english').getList(function (list) {
+    wordfreq.stop();
+
+    ok(true, 'Passed!');
+    start();
   });
-  equal(typeof wordfreq.stop, 'function', 'Passed!');
+});
+
+test('wordfreq.stop() can notify the pending callbacks', function () {
+  stop();
+  wordfreq.process('english english english').getList(function (list) {
+    strictEqual(list, undefined, 'Passed!');
+
+    start();
+  }).stop(true);
+});
+
+test('stopped wordfreq instance should silently discard all queries follows', function () {
+  wordfreq.process('english english english').stop().getList();
+  ok(true, 'Passed!');
 });
 
 test('wordfreq.getList function exists', function () {
@@ -93,6 +115,5 @@ test('wordfreq functions are chainable', function () {
   strictEqual(wordfreq, wordfreq.getLength(), 'Passed');
   strictEqual(wordfreq, wordfreq.getVolume(), 'Passed');
 });
-
 
 }());
