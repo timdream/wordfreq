@@ -267,6 +267,13 @@ var WordFreqSync = function WordFreqSync(options) {
   };
 };
 
+WordFreqSync.isSupported = !!(global.Worker &&
+  Array.prototype.push &&
+  Array.prototype.indexOf &&
+  Array.prototype.forEach &&
+  Array.isArray &&
+  Object.create);
+
 if (typeof define === 'function' && define.amd) {
   // Expose the library as an AMD module
   define('wordfreqsync', [], function() { return WordFreqSync; });

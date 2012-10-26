@@ -1,5 +1,10 @@
 # WordFreq APIs
 
+## Feature detection
+
+Both `WordFreq` and `WordFreqSync` constructors contains a `isSupported` property.
+If the property evaluates to `false`, the browser/JavaScript runtime does not supply necessary functionalities for WordFreq to run.
+
 ## Initialization
 
      var wordfreq = WordFreq(options);
