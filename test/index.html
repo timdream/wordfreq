@@ -14,11 +14,20 @@
   <!-- Include wordfreq.worker.js directly so we can test WordFreqSync -->
   <script src="../src/wordfreq.worker.js"></script>
 
+  <!-- includes almond.js for testing AMD API -->
+  <script src="almond/almond.js"></script>
+  <!-- includes the scripts again to have them loaded with define() -->
+  <script src="../src/wordfreq.js"></script>
+  <script src="../src/wordfreq.worker.js"></script>
+
   <!-- test scripts -->
   <script src="unit/loader.js"></script>
   <script src="unit/worker.js"></script>
   <script src="unit/process.js"></script>
   <script src="unit/get.js"></script>
   <script src="unit/options.js"></script>
+  <script src="unit/amd.js"></script>
+
+
 </body>
 </html>
