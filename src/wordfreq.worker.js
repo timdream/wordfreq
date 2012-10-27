@@ -74,19 +74,23 @@ var WordFreqSync = function WordFreqSync(options) {
   options.minimumCount = options.minimumCount || 2;
 
 
-  // Return all possible substrings of a give string.
-  // callback will be called 2 * str.length if max is unrestricted.
-  var getAllSubStrings = function getAllSubStrings(str, max, callback) {
+  // Return all possible substrings of a give string in an array
+  // If there is no maxLength is unrestricted, array will contain
+  // (2 * str.length) substrings.
+  var getAllSubStrings = function getAllSubStrings(str, maxLength) {
     if (!str.length)
-      return;
+      return [];
 
-    var i = Math.min(str.length, max);
+    var result = [];
+    var i = Math.min(str.length, maxLength);
     do {
-      callback(str.substr(0,i));
+      result.push(str.substr(0,i));
     } while (--i);
 
     if (str.length > 1)
-      getAllSubStrings(str.substr(1), max, callback);
+      result = result.concat(getAllSubStrings(str.substr(1), maxLength));
+
+    return result;
   }
 
   return {
@@ -191,7 +195,8 @@ var WordFreqSync = function WordFreqSync(options) {
           if (chunk.length <= 1)
             return;
 
-          getAllSubStrings(chunk, options.maxiumPhraseLength, function (substr) {
+          var substrings = getAllSubStrings(chunk, options.maxiumPhraseLength);
+          substrings.forEach(function (substr) {
             if (substr.length <= 1)
               return;
 
@@ -207,7 +212,8 @@ var WordFreqSync = function WordFreqSync(options) {
         // the longer terms)
         if (options.filterSubstring) {
           for (var term in pendingTerms) {
-            getAllSubStrings(term, options.maxiumPhraseLength, function (substr) {
+            var substrings = getAllSubStrings(term, options.maxiumPhraseLength);
+            substrings.forEach(function (substr) {
               if (term === substr)
                 return;
 
