@@ -284,8 +284,7 @@ var WordFreqSync = function WordFreqSync(options) {
   };
 };
 
-WordFreqSync.isSupported = !!(global.Worker &&
-  Array.prototype.push &&
+WordFreqSync.isSupported = !!(Array.prototype.push &&
   Array.prototype.indexOf &&
   Array.prototype.forEach &&
   Array.isArray &&
