@@ -293,6 +293,15 @@ WordFreqSync.isSupported = !!(Array.prototype.push &&
 if (typeof define === 'function' && define.amd) {
   // Expose the library as an AMD module
   define('wordfreqsync', [], function() { return WordFreqSync; });
+} else if (typeof module === 'object' && global === module.exports) {
+  // export WordFreqSync in node.js
+  // note that |global| here refer to |this| of the script execution context,
+  // not |global| in node.js
+  module.exports = WordFreqSync;
+
+  if (require.main === module) {
+    console.error('Error: WordFreqSync is not meant to be executed directly.');
+  }
 } else {
   // expose WordFreqSync as a global interface.
   global.WordFreqSync = WordFreqSync;

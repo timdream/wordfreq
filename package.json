@@ -1,0 +1,2 @@
+{ "name" : "wordfreq",
+  "main" : "./src/wordfreq.worker.js" }
