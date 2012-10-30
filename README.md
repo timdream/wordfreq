@@ -30,6 +30,17 @@ Load `wordfreq.js` script to the web page, and run:
 
 To use this library synchronously, load `wordfreq.worker.js` and use the `WordFreqSync` interface. Check `API.md` for available options and methods.
 
+### Command-line interface
+
+Command-line interface is available, powered by [Node.js](http://nodejs.org/). To install globally, run
+
+    npm install -g wordfreq
+
+Example usage:
+
+    wordfreq ~/mypost.txt | less
+    cat ~/mypost.txt | wordfreq - | less
+
 ## Algorithm 
 
 Corpus is calculated with a simple N-gram algorithm and sub-string filter. 
