@@ -1,5 +1,8 @@
 language: python
 install: echo -n
+branches:
+  except:
+    - gh-pages
 before_script:
   - python -m SimpleHTTPServer 8009 &
   - sleep 10
