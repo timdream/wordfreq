@@ -8,6 +8,9 @@
 <body>
   <div id="qunit"></div>
   <script src="qunit/qunit/qunit.js"></script>
+  <script>
+    QUnit.config.testTimeout = 10*1E3;
+  </script>
 
   <!-- script to test -->
   <script src="../src/wordfreq.js"></script>
