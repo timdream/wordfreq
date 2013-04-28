@@ -4,6 +4,7 @@ branches:
   except:
     - gh-pages
 before_script:
+  - phantomjs --version
   - python -m SimpleHTTPServer 8009 &
   - sleep 10
 script: phantomjs test/qunit/addons/phantomjs/runner.js http://localhost:8009/test/
