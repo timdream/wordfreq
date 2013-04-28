@@ -8,4 +8,4 @@ before_script:
   - sleep 10
 script: phantomjs test/qunit/addons/phantomjs/runner.js http://localhost:8009/test/
 after_script:
-  - kill `ps aux | grep "python -m SimpleHTTPServer" | grep -v grep | awk '{print $2'}`
+  - kill `ps aux | grep "python -m SimpleHTTPServer" | grep -v grep | awk '{print $2}'`
