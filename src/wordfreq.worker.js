@@ -309,11 +309,14 @@ if (typeof define === 'function' && define.amd) {
   /* If those conditions are met, assume we are in Web Workers.
    * Web Workers script that importScripts() us must have their onmessage
    * handler set-up first.
-   * 1. the global object must have a self property that is assigned to itself.
+   * 1. the global object must have a self property.
    * 2. the global object must NOT have an window property that is assigned to
    *    itself.
+   * 3. there are two Web Workers method exists under 'self'.
+   *
+   * XXX: I would love to check (self === global) but it would fail on IE10.
    */
-  if (('self' in global) && (global === self) &&
+  if (('self' in global) &&
       !(('window' in global) && window === global) &&
       !self.onmessage && self.postMessage && self.importScripts) {
     var wordfreqsync;
