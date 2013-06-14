@@ -1,4 +1,4 @@
-# wordfreq
+# wordfreq [![Build Status](https://secure.travis-ci.org/timdream/wordfreq.png)](http://travis-ci.org/timdream/wordfreq)
 
 [Text corpus](https://en.wikipedia.org/wiki/Text_corpus) calculation in Javascript. 
 Supports Chinese, English.
@@ -69,9 +69,3 @@ You will find all the information you need to write testcases on the [QUnit](htt
 All non-trivial code submission are expected to accompany with testcases.
 
 **Known IE10 issue**: Looks like IE10 suffers from [the same issue](https://bugzilla.mozilla.org/show_bug.cgi?id=785248) with Firefox <= 17, where Web Worker will choke and couldn't finish the entire test suite.
-
-### travis-ci.org Status
-
-PhantomJS on Travis-CI exhibits random hang, results random falling test result; but here is the badge: 
-
-[![Build Status](https://secure.travis-ci.org/timdream/wordfreq.png)](http://travis-ci.org/timdream/wordfreq)
