@@ -68,9 +68,6 @@ You may also run the tests with PhantomJS by running
 You will find all the information you need to write testcases on the [QUnit](http://qunitjs.com) website.
 All non-trivial code submission are expected to accompany with testcases.
 
-**Known Gecko issue**: The testcases will make Firefox choke; Web Worker will stop working after a few reloads. 
-This was since fixed in [bug 785248](https://bugzilla.mozilla.org/show_bug.cgi?id=785248) on Oct. 3, 2012, so use Firefox 18 (currently [Aurora](https://www.mozilla.org/firefox/aurora/)) instead for testing.
-
 ### travis-ci.org Status
 
 PhantomJS on Travis-CI exhibits random hang, results random falling test result; but here is the badge: 
