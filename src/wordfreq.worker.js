@@ -113,7 +113,7 @@ var WordFreqSync = function WordFreqSync(options) {
         words.forEach(function (word) {
           word = word
             .replace(/\.+/g, '.') // replace multiple full stops
-            .replace(/(.{3,})\./g, '$1') // replace single full stop
+            .replace(/(.{3,})\.$/g, '$1') // replace single trailing stop
             .replace(/n[\'’]t\b/ig, '') // get rid of ~n't
             .replace(/[\'’](s|ll|d|ve)?\b/ig, ''); // get rid of ’ and '
 

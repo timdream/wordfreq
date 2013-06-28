@@ -85,6 +85,38 @@ test('works on Chinese phrases and substring phrases', function () {
   });
 });
 
+test('hostname should survive as whole', function () {
+  var str = 'foo.timdream.org\nfoo.timdream.org\nfoo.timdream.org';
+
+  stop();
+  wordfreq.process(str, function (list) {
+    deepEqual(list, [['foo.timdream.org', 3]], 'Passed!');
+
+    start();
+  });
+});
+
+test('trailing dot dot dot should be removed', function () {
+  var str = 'hello...\nhello...\nhello......';
+
+  stop();
+  wordfreq.process(str, function (list) {
+    deepEqual(list, [['hello', 3]], 'Passed!');
+
+    start();
+  });
+});
+
+test('trailing stop should be removed', function () {
+  var str = 'hello.\nhello.\nhello.';
+
+  stop();
+  wordfreq.process(str, function (list) {
+    deepEqual(list, [['hello', 3]], 'Passed!');
+
+    start();
+  });
+});
 
 /* TBD: Disabled because it is not currently supported
 
