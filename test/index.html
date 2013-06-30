@@ -9,7 +9,20 @@
   <div id="qunit"></div>
   <script src="qunit/qunit/qunit.js"></script>
   <script>
-    QUnit.config.testTimeout = 10*1E3;
+    'use strict';
+
+    QUnit.config.testTimeout = 11*1E3;
+
+    // Wrap the async |start()| function with a 1 sec delay.
+    var _start = start;
+    start = function delayedStart() {
+      // XXX: bind() is missing from PhantomJS:
+      // https://github.com/ariya/phantomjs/issues/10522
+      var args = arguments;
+      setTimeout(function() {
+        _start.apply(window, args);
+      }, 1000);
+    };
   </script>
 
   <!-- script to test -->
