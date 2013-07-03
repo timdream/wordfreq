@@ -13,6 +13,11 @@
   @media (min-width: 980px) {
     body { padding-top: 60px; }
   }
+
+  *[hidden] {
+    display: none;
+  }
+
   textarea {
     height: 4em;
     transition: height 0.2s ease 0.5s;
@@ -31,8 +36,15 @@
     display: inline-block; width: 0; overflow: hidden; }
   #result:empty { display: none; }
 
-  #loading { -webkit-animation: blink 2s infinite; }
+  #loading {
+    animation: blink 2s infinite;
+    -webkit-animation: blink 2s infinite;
+  }
   @-webkit-keyframes blink {
+    0% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+  @keyframes blink {
     0% { opacity: 1; }
     100% { opacity: 0; }
   }
