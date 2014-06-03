@@ -140,7 +140,7 @@
         span.textContent = item[1] + '\t';
         li.insertBefore(span, li.firstChild);
         var gray = Math.round(51 +
-                   (194 - 51) * (highestCount - item[1]) / highestCount);
+          160 * Math.pow((highestCount - item[1]) / (highestCount - 2), 6));
         li.style.color = 'rgb(' + gray + ',' + gray + ',' + gray + ')';
         li.title = item[1];
         docFragment.appendChild(li);
