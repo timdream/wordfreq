@@ -1,6 +1,6 @@
 [submodule "test/qunit"]
 	path = test/qunit
-	url = git://github.com/jquery/qunit.git
+	url = https://github.com/jquery/qunit.git
 [submodule "test/almond"]
 	path = test/almond
 	url = https://github.com/requirejs/almond.git
