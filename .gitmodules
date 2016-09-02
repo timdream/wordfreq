@@ -3,4 +3,4 @@
 	url = git://github.com/jquery/qunit.git
 [submodule "test/almond"]
 	path = test/almond
-	url = git://github.com/jrburke/almond.git
+	url = https://github.com/requirejs/almond.git
