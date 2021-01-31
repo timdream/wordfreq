@@ -1,6 +1,6 @@
 /*! wordfreq - Text corpus calculation in Javascript.
 
-  Author: timdream <http://timc.idv.tw/>
+  Author: timdream <https://timdream.org/>
 
   This file contains the following library (unmodified but minified):
   http://tartarus.org/~martin/PorterStemmer/js.txt

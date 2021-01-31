@@ -2,7 +2,7 @@
 
 /*! wordfreq - Text corpus calculation in Javascript.
 
-  Author: timdream <http://timc.idv.tw/>
+  Author: timdream <https://timdream.org/>
 
   This file contains command-line interface for WordFreq.
 
